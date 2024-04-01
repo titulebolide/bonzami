@@ -1,10 +1,8 @@
 from django.shortcuts import render
 from django import http
-from django.views.decorators.csrf import csrf_exempt
 from . import models
 import datetime as dt
 
-@csrf_exempt
 def create_group(request):
     if request.method != "GET":
         return http.HttpResponseBadRequest()
@@ -21,14 +19,12 @@ def create_group(request):
         users[username] = user.id
     return http.JsonResponse({"gid" : group.id, "uids" : users})
 
-@csrf_exempt
 def get_group(request, groupid):
     group = models.Group.objects.get(id = groupid)
     users = models.User.objects.filter(group_id = groupid)
     return http.JsonResponse({"gid" : str(groupid), "gname" : group.name, "uids" : {user.id : user.name for user in users}})
 
 
-@csrf_exempt
 def add_expense(request, groupid):
     if request.method != "GET":
         return http.HttpResponseBadRequest()
