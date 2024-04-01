@@ -78,6 +78,7 @@ def format_expense_data(expense):
         "name" : expense.name,
         "date" : int(dt.datetime.timestamp(expense.date)),
         "amount" : expense.amount,
+        "id" : expense.id,
         "by_iud" : expense.by.id,
         "by_uname" : expense.by.name,
         "shares" : [
@@ -97,7 +98,7 @@ def get_expense(request, groupid, expenseid):
     if expense.group.id != groupid:
         print(f"expense {expenseid} is not in group") 
         return http.HttpResponseBadRequest()
-    return http.JsonResponse(format_expense_data(groupid, expenseid))
+    return http.JsonResponse(format_expense_data(expense))
 
 def get_all_expenses(request, groupid):
     expenses = models.Expense.objects.filter(group_id = groupid)

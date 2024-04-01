@@ -3,7 +3,7 @@ import { useLoaderData } from "react-router-dom";
 
 let groupid = "accfad71-8456-4ac2-8880-e609e85a52a5"
 
-export async function expenseLoader({params}) {
+export async function expenseListLoader({params}) {
   const res = await fetch("http://127.0.0.1:8000/api/g/" + params.guid + "/allexpenses")
   return res.json()
 }
@@ -20,7 +20,7 @@ function timestampToDate(timestamp) {
 
 function ExpenseItem({expense}) {
   return (
-    <div className="box" onClick={()=>window.location = ""}>
+    <div className="box" onClick={()=>window.location += "/e/" + expense.id}>
       <div className="columns">
         <div className="column">
           <strong>{expense.name}</strong>
@@ -44,19 +44,11 @@ function ExpenseItem({expense}) {
 export default function ExpenseList() {
   const expenses = useLoaderData().data;
 
-  return (
-    <section className="section">
-      <div className="container" style={{maxWidth:600}}>
-        {
-          expenses.map((expense, index) =>
-            <div className="block" key={index}>
-              <ExpenseItem
-                expense={expense}
-              />
-            </div>
-          )
-        }
-      </div>
-    </section>
-  );
+  return expenses.map((expense) =>
+    <div className="block" key={expense.id}>
+      <ExpenseItem
+        expense={expense}
+      />
+    </div>
+  )
 }
