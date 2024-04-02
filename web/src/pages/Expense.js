@@ -29,7 +29,7 @@ export default function Expense() {
           <div className="column is-offset-1">
             {
               expense.shares.map((share, index) => (
-                <div className="columns">
+                <div className="columns" key={index}>
                   <div className="column" style={{textAlign: "right"}}>{share.uname}</div>
                   <div className="column">{share.share}</div>
                 </div>

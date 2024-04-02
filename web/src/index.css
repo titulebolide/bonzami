@@ -3,3 +3,14 @@ body {
   font-optical-sizing: auto;
   font-style: normal;
 }
+
+.expense-item {
+  cursor: pointer;
+  border: 1px solid white;
+  transition-duration: 0.2s;
+
+}
+
+.expense-item:hover {
+  border: 1px solid black;
+}
