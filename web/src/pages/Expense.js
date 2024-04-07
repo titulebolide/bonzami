@@ -32,7 +32,7 @@ export default function Expense() {
         leftIcon = "ri-arrow-left-line"
         leftIconOnClick = {() => {window.location = `/g/${params.guid}`}}
         rightIcon = "ri-pencil-fill"
-        rightIconOnClick = {() => {}}
+        rightIconOnClick = {() => {window.location = `/g/${params.guid}/e/${params.expenseid}/edit`}}
       />
       <div className="box">
         <div className="columns">
