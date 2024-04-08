@@ -1,6 +1,8 @@
 import {useEffect, useState} from "react";
 import { useLoaderData } from "react-router-dom";
 
+import "./ExpenseList.css"
+
 let groupid = "accfad71-8456-4ac2-8880-e609e85a52a5"
 
 export async function expenseListLoader({params}) {
@@ -26,7 +28,7 @@ function timestampToDate(timestamp) {
 function ExpenseItem({groupid, expense}) {
   return (
     <div 
-      className="box expense-item" 
+      className="expense-item" 
       onClick={()=> window.location = `/g/${groupid}/e/${expense.id}`}
     >
       <div className="columns is-mobile">
@@ -53,16 +55,16 @@ export default function ExpenseList() {
   return (
     <>
       <div className="title is-2">{group.gname}</div>
-      {
-        expenses.map((expense) =>
-          <div className="block" key={expense.id}>
+      <div id="expense-list">
+        {
+          expenses.map((expense) =>
             <ExpenseItem
               groupid={group.gid}
               expense={expense}
-            />
-          </div>
-        )
-      }
+              />
+          )
+        }
+      </div>
     </>
   )
 }
