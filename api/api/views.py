@@ -24,6 +24,9 @@ def get_group(request, groupid):
     users = models.User.objects.filter(group_id = groupid)
     return http.JsonResponse({"gid" : str(groupid), "gname" : group.name, "uids" : {user.id : user.name for user in users}})
 
+def timestamp_to_datetime(ts):
+    return dt.datetime.fromtimestamp(ts)
+
 
 def add_expense(request, groupid):
     if request.method != "GET":
@@ -32,7 +35,6 @@ def add_expense(request, groupid):
     if not ("name" in data and "datetime" in data and "amount" in data and "by" in data and "shares" in data):
         return http.HttpResponseBadRequest()
     group_uids = [user.id for user in models.User.objects.filter(group = groupid)]
-    print(group_uids)
     if int(data["by"]) not in group_uids:
         print("by user is not in group")
         return http.HttpResponseBadRequest()
@@ -41,7 +43,7 @@ def add_expense(request, groupid):
         if int(uid) not in group_uids:
             print(f"share user {uid} is not in group") 
             return http.HttpResponseBadRequest()
-    datetime = dt.datetime.fromtimestamp(int(data["datetime"]))
+    datetime = timestamp_to_datetime(int(data["datetime"]))
     expense = models.Expense(
         name=data["name"], 
         date=datetime, 
@@ -70,6 +72,37 @@ def add_expense(request, groupid):
             share = default_share,
         )
         share.save()
+    return http.JsonResponse({})
+
+def edit_expense(request, groupid, expenseid):
+    if request.method != "GET":
+        return http.HttpResponseBadRequest()
+    data = request.GET
+    expense = models.Expense.objects.get(id=expenseid)
+    group_uids = [user.id for user in models.User.objects.filter(group = groupid)]
+    if expense.group.id != groupid:
+        return http.HttpResponseNotAllowed()
+    if "name" in data:
+        expense.name = data["name"]
+    if "datetime" in data:
+        expense.date = timestamp_to_datetime(int(data["datetime"]))
+    if "amount" in data:
+        expense.amount = float(data["amount"])
+    if "by" in data:
+        if int(data["by"]) not in group_uids:
+            print("by user is not in group")
+            return http.HttpResponseBadRequest()
+        expense.by_id = int(data["by"])
+    expense.save()
+    if "shares" in data:
+        for share_data in data.getlist("shares"):
+            uid, share_num = share_data.split(":")
+            if int(uid) not in group_uids:
+                print(f"share user {uid} is not in group") 
+                return http.HttpResponseBadRequest()
+            share = models.ExpenseShare.objects.get(user_id = uid, expense_id = expense.id)
+            share.share = share_num
+            share.save()
     return http.JsonResponse({})
 
 def format_expense_data(expense):

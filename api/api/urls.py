@@ -8,5 +8,6 @@ urlpatterns = [
     path("g/<uuid:groupid>/addexpense", views.add_expense),
     path("g/<uuid:groupid>/allexpenses", views.get_all_expenses),
     path("g/<uuid:groupid>/e/<int:expenseid>/info", views.get_expense),
+    path("g/<uuid:groupid>/e/<int:expenseid>/edit", views.edit_expense),
     path("g/<uuid:groupid>/balance", views.get_balance),
 ]
