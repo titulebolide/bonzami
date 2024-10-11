@@ -6,7 +6,7 @@ import ExpenseList, {expenseListLoader} from "./pages/ExpenseList"
 
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Expense, {expenseLoader} from "./pages/Expense";
-import ExpenseEditor from "./pages/ExpenseEditor";
+import ExpenseEditor, {expenseEditorLoader} from "./pages/ExpenseEditor";
 import CustomContainer from "./pages/CustomContainer";
 
 
@@ -28,7 +28,7 @@ const router = createBrowserRouter([
       {
         path: "/g/:guid/e/:expenseid/edit",
         element: <ExpenseEditor />,
-        loader: expenseLoader
+        loader: expenseEditorLoader
       }
     ]
   }
