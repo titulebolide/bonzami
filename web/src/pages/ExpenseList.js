@@ -1,6 +1,8 @@
 import {useEffect, useState} from "react";
 import { useLoaderData } from "react-router-dom";
 
+import EditButtons from "../components/EditButtons";
+
 import "./ExpenseList.css"
 
 let groupid = "accfad71-8456-4ac2-8880-e609e85a52a5"
@@ -25,23 +27,44 @@ function timestampToDate(timestamp) {
   return day + "/" + month + "/" + year;
 }
 
-function ExpenseItem({groupid, expense}) {
+function ExpenseItem({ expense, isCollapsed, onClick }) {
   return (
-    <div 
-      className="expense-item" 
-      onClick={()=> window.location = `/g/${groupid}/e/${expense.id}`}
-    >
-      <div className="columns is-mobile">
+    <div onClick={onClick} className="box">
+      <div className="columns" style={{marginBottom:"calc(var(--bulma-column-gap)*-1"}}>
         <div className="column">
           <div><strong>{expense.name}</strong></div>
           <div><span className="has-text-grey-light">paid by </span>{expense.by_uname}</div>
         </div>
-        <div className="column is-narrow" style={{textAlign:"right"}}>
+        <div className="column is-narrow" style={{ textAlign: "right" }}>
           <div>
             <strong>{expense.amount}</strong> €
           </div>
-          <div>
-            {timestampToDate(expense.date)}
+        </div>
+      </div>
+      <div className={"expense-item " + (isCollapsed ? "expense-item-collapsed" : "")}>
+        <div className="columns" style={{marginTop: "1em"}}>
+          <div className="column is-one-third">
+            <p className="title is-5 text-align-center"  >Shares</p>
+            {expense.shares.map((share, index) => (
+              <div key={index} className="columns is-mobile" style={{ marginBottom: "0.5em" }}>
+                <div className="column">
+                  <strong>{share.uname}</strong>
+                </div>
+                <div className="column is-narrow has-text-right">
+                  {share.share} €
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="column"></div>
+        </div>
+        <div className="columns">
+          <div className="column">
+          </div>
+          <div className="column is-narrow">
+            <EditButtons
+              onClick={() => {}}
+            />
           </div>
         </div>
       </div>
@@ -49,20 +72,54 @@ function ExpenseItem({groupid, expense}) {
   )
 }
 
+function DateHeader({date}) {
+  return (
+    <div style={{textAlign:"center", paddingTop: "2em", paddingBottom: "2em"}}>
+      <h2 className="has-text-weight-bold">{date}</h2>
+    </div>
+  )
+}
+
 export default function ExpenseList() {
-  const [group, expenses] = useLoaderData();
+  const [group, expenses] = useLoaderData()
+
+  const [collapsedIndex, setCollapsedIndex] = useState(null)
+
+  let prevDate = null
+
+  // scroll all the way down to the bottom of the page
+  // TODO : Do that only at opening
+  // useEffect(() => {
+  //   window.scrollTo(0, document.body.scrollHeight)
+  // })
 
   return (
     <>
-      <div className="title is-2">{group.gname}</div>
+      <div className="card" style={{position: "sticky", top: 0, zIndex: 100}}>
+        <div className="card-content title is-2">{group.gname}</div>
+      </div>
       <div id="expense-list">
         {
-          expenses.map((expense) =>
-            <ExpenseItem
-              groupid={group.gid}
-              expense={expense}
-              />
-          )
+          expenses.map((expense) => {
+            let currDate = timestampToDate(expense.date)
+            let showDate = (currDate !== prevDate)
+            prevDate = currDate
+            return (
+              <div key={expense.id} style={{paddingBottom: "1em"}}>
+                {showDate && <DateHeader date={currDate} />}
+                <ExpenseItem
+                  expense={expense}
+                  isCollapsed={collapsedIndex === expense.id}
+                  onClick={() => {
+                    console.log("lkjlkjh")
+                    setCollapsedIndex(
+                      collapsedIndex === expense.id ? null : expense.id
+                    )
+                  }}
+                  />
+              </div>
+            )
+          })
         }
       </div>
     </>

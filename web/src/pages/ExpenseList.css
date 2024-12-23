@@ -1,17 +1,9 @@
-/* #expense-list {
-
-} */
-
 .expense-item {
-    cursor: pointer;
-    transition-duration: 0.2s;    
-    border-top: 1px solid #777;
-    border-bottom: 1px solid #777;
-    padding: 5px 20px;
-    background-color: "white";
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out;
+    max-height: 0;
 }
 
-.expense-item:hover {
-    background-color: #ddd;
+.expense-item-collapsed {
+    max-height: 500px;
 }
-  

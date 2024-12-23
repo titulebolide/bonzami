@@ -8,6 +8,10 @@ body {
   margin: auto 0;
 }
 
+.horizontal-center {
+  margin: 0 auto;
+}
+
 .capitalize {
   text-transform: capitalize;
 }
@@ -15,3 +19,8 @@ body {
 .text-align-right {
   text-align: right;
 }
+
+.text-align-center {
+  text-align: center;
+}
+

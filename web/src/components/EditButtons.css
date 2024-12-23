@@ -1,0 +1,38 @@
+.round-button {
+    border-radius: 1000px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    background-color: white;
+}
+
+.round-button-shadowed {
+    box-shadow: 0 3px 7px rgba(0, 0, 0, 0.2);
+}
+
+.round-button-container {
+    position: relative;
+    padding-left: 5px;
+    padding-right: 11px;
+    padding-top: 4px;
+    padding-bottom: 11px;
+    /* z-index: 1; */
+}
+
+.edit-buttons {
+    display: flex;
+    /* flex-direction: row-reverse; */
+    width: 180px;
+    overflow:visible;
+    justify-content: flex-end;
+}
+
+.third-button {
+    left: 63px;
+    /* z-index: 0; */
+    transition: left 0.1s ease-out;
+}
+
+.third-button-visible {
+    left: 0;
+}
