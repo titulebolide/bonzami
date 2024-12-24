@@ -19,7 +19,7 @@ function RoundButton({size, icon, onClick = () => {}, subClass = "", shadow = tr
 
 export default function EditButtons({onClick}) {
 
-  const [isEditing, setIsEditing] = useState();
+  const [isEditing, setIsEditing] = useState(false);
 
   const spacing = 16;
   const btnSize = 48;

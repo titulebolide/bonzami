@@ -4,6 +4,7 @@
     place-items: center;
     cursor: pointer;
     background-color: white;
+    transition: box-shadow 0.15s ease-out;
 }
 
 .round-button-shadowed {
@@ -30,7 +31,7 @@
 .third-button {
     left: 63px;
     /* z-index: 0; */
-    transition: left 0.1s ease-out;
+    transition: left 0.15s ease-out;
 }
 
 .third-button-visible {
