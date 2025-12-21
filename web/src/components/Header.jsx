@@ -35,9 +35,6 @@ export default function Header() {
         if (location.pathname.endsWith("/edit")) {
             setTitle(params.expenseid ? "Edit Expense" : "New Expense");
             setShowBack(true);
-        } else if (location.pathname.includes("/e/")) {
-            setTitle("Expense Details");
-            setShowBack(true);
         } else if (params.guid) {
             // List page
             setShowBack(false);
