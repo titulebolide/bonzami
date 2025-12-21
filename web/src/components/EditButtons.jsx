@@ -3,21 +3,21 @@ import { useLoaderData } from "react-router-dom";
 
 import "./EditButtons.css"
 
-function RoundButton({size, icon, onClick = () => {}, subClass = "", shadow = true}) {
+function RoundButton({ size, icon, onClick = () => { }, subClass = "", shadow = true }) {
   return (
-    <div 
+    <div
       onClick={(e) => {
         e.stopPropagation()
         onClick(e)
         console.log("prout")
-      }} 
-      className={"round-button " + subClass + (shadow ? " round-button-shadowed" : "")} style={{height: size + "px", width: size + "px"}}>
+      }}
+      className={"round-button " + subClass + (shadow ? " round-button-shadowed" : "")} style={{ height: size + "px", width: size + "px" }}>
       <i className={icon} ></i>
     </div>
   )
 }
 
-export default function EditButtons({onClick}) {
+export default function EditButtons({ onClick }) {
 
   const [isEditing, setIsEditing] = useState(false);
 
@@ -35,32 +35,32 @@ export default function EditButtons({onClick}) {
       elt = elt.parentElement
     }
 
-    if (!"buttonaction" in elt.attributes) {
+    if (!("buttonaction" in elt.attributes)) {
       console.log("Cannot find clicked element name")
       return
     }
 
     const buttonname = elt.attributes.buttonaction.value;
-    
+
     if (buttonname === "edit") {
       setIsEditing(true)
     }
     if (buttonname === "save" || buttonname === "cancel") {
       setIsEditing(false)
     }
-    
+
     onClick(buttonname)
   }
 
   return (
     <div className="edit-buttons">
       <div className={"round-button-container third-button " + (isEditing ? "third-button-visible" : "")}>
-        <RoundButton size={btnSize} icon="ri-save-2-line" shadow={isEditing}/>
+        <RoundButton size={btnSize} icon="ri-save-2-line" shadow={isEditing} />
       </div>
       <div className="round-button-container">
-        <RoundButton 
-          size={btnSize} 
-          onClick={() => {setIsEditing(!isEditing)}}
+        <RoundButton
+          size={btnSize}
+          onClick={() => { setIsEditing(!isEditing) }}
           icon={isEditing ? "ri-arrow-go-back-line" : "ri-pencil-fill"}
         />
       </div>
