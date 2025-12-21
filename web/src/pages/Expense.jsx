@@ -1,7 +1,6 @@
 import { useLoaderData, useParams } from "react-router-dom";
-import "./Expense.css"
 
-export async function expenseLoader({params}) {
+export async function expenseLoader({ params }) {
   const res = await fetch("http://127.0.0.1:8000/api/g/" + params.guid + "/e/" + params.expenseid + "/info")
   let dat = res.json()
   dat.guid = params.guid
@@ -9,16 +8,16 @@ export async function expenseLoader({params}) {
   return dat
 }
 
-function ToolHeader({leftIcon, leftIconOnClick, rightIcon, rightIconOnClick}) {
+function ToolHeader({ leftIcon, leftIconOnClick, rightIcon, rightIconOnClick }) {
   return (
-    <div id="tool-hdr">
-      <div className="tool-hdr-btn" onClick={leftIconOnClick}>
+    <div className="w-full flex justify-between border-b-2 border-gray-400">
+      <div className="text-2xl px-5 rounded-[8px] m-[7px] duration-200 cursor-pointer hover:bg-gray-200" onClick={leftIconOnClick}>
         <i className={leftIcon}></i>
       </div>
-      <div className="tool-hdr-btn" onClick={rightIconOnClick}>
+      <div className="text-2xl px-5 rounded-[8px] m-[7px] duration-200 cursor-pointer hover:bg-gray-200" onClick={rightIconOnClick}>
         <i className={rightIcon}></i>
       </div>
-    </div>  
+    </div>
   )
 }
 
@@ -29,31 +28,31 @@ export default function Expense() {
   return (
     <>
       <ToolHeader
-        leftIcon = "ri-arrow-left-line"
-        leftIconOnClick = {() => {window.location = `/g/${params.guid}`}}
-        rightIcon = "ri-pencil-fill"
-        rightIconOnClick = {() => {window.location = `/g/${params.guid}/e/${params.expenseid}/edit`}}
+        leftIcon="ri-arrow-left-line"
+        leftIconOnClick={() => { window.location = `/g/${params.guid}` }}
+        rightIcon="ri-pencil-fill"
+        rightIconOnClick={() => { window.location = `/g/${params.guid}/e/${params.expenseid}/edit` }}
       />
-      <div className="box">
-        <div className="columns">
-          <div className="column">
-            <div className="title">{expense.name}</div>
-            <div className="subtitle">paid by {expense.by_uname}</div>
+      <div className="bg-white rounded-lg shadow-md p-4 m-4">
+        <div className="flex justify-between items-center">
+          <div className="flex-1">
+            <div className="text-2xl font-bold">{expense.name}</div>
+            <div className="text-gray-500">paid by {expense.by_uname}</div>
           </div>
-          <div className="column is-narrow">
-            <div className="title">{expense.amount} €</div>
+          <div className="flex-none">
+            <div className="text-2xl font-bold">{expense.amount} €</div>
           </div>
         </div>
       </div>
-      <div className="section">
-        <div className="title is-5">Shares</div>
-        <div className="columns is-mobile">
-          <div className="column is-offset-1">
+      <div className="p-4">
+        <div className="text-xl font-bold mb-4">Shares</div>
+        <div className="flex">
+          <div className="w-full md:w-11/12 md:ml-auto">
             {
               expense.shares.map((share, index) => (
-                <div className="columns is-mobile" key={index}>
-                  <div className="column" style={{textAlign: "right"}}>{share.uname}</div>
-                  <div className="column">{share.share}</div>
+                <div className="flex mb-2" key={index}>
+                  <div className="flex-1 text-right pr-4 font-bold">{share.uname}</div>
+                  <div className="flex-1">{share.share}</div>
                 </div>
               ))
             }

@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useLoaderData } from "react-router-dom";
 
-import "./EditButtons.css"
-
 function RoundButton({ size, icon, onClick = () => { }, subClass = "", shadow = true }) {
   return (
     <div
@@ -11,7 +9,8 @@ function RoundButton({ size, icon, onClick = () => { }, subClass = "", shadow = 
         onClick(e)
         console.log("prout")
       }}
-      className={"round-button " + subClass + (shadow ? " round-button-shadowed" : "")} style={{ height: size + "px", width: size + "px" }}>
+      className={`rounded-full grid place-items-center cursor-pointer bg-white transition-shadow duration-150 ease-out ${subClass} ${shadow ? "shadow-[0_3px_7px_rgba(0,0,0,0.2)]" : ""}`}
+      style={{ height: size + "px", width: size + "px" }}>
       <i className={icon} ></i>
     </div>
   )
@@ -21,7 +20,6 @@ export default function EditButtons({ onClick }) {
 
   const [isEditing, setIsEditing] = useState(false);
 
-  const spacing = 16;
   const btnSize = 48;
 
   const internalOnClick = (event) => {
@@ -53,58 +51,20 @@ export default function EditButtons({ onClick }) {
   }
 
   return (
-    <div className="edit-buttons">
-      <div className={"round-button-container third-button " + (isEditing ? "third-button-visible" : "")}>
+    <div className="flex w-[180px] overflow-visible justify-end">
+      <div className={`relative pl-[5px] pr-[11px] pt-[4px] pb-[11px] z-0 absolute left-[63px] transition-[left] duration-150 ease-out ${isEditing ? "left-0" : ""}`}>
         <RoundButton size={btnSize} icon="ri-save-2-line" shadow={isEditing} />
       </div>
-      <div className="round-button-container">
+      <div className="relative pl-[5px] pr-[11px] pt-[4px] pb-[11px] z-10">
         <RoundButton
           size={btnSize}
           onClick={() => { setIsEditing(!isEditing) }}
           icon={isEditing ? "ri-arrow-go-back-line" : "ri-pencil-fill"}
         />
       </div>
-      <div className="round-button-container">
+      <div className="relative pl-[5px] pr-[11px] pt-[4px] pb-[11px] z-10">
         <RoundButton size={btnSize} icon="ri-delete-bin-line" />
       </div>
     </div>
-    // <div onClick={internalOnClick} class="tabs is-toggle is-toggle-rounded">
-    //   <ul>
-    //     { !isEditing && (
-    //       <>
-    //         <li buttonaction="edit">
-    //           <a className="has-background-info-light">
-    //             <span class="icon is-small"><i class="ri-pencil-fill"></i></span>
-    //           </a>
-    //         </li>
-    //         <li buttonaction="delete">
-    //           <a className="has-background-danger-light">
-    //             <span class="icon is-small"><i class="ri-delete-bin-line"></i></span>
-    //           </a>
-    //         </li>
-    //       </>
-    //     )}
-    //     { isEditing && (
-    //       <>
-    //         <li buttonaction="save">
-    //           <a>
-    //             <span class="icon is-small"><i class="ri-save-2-line"></i></span>
-    //           </a>
-    //         </li>
-    //         <li buttonaction="cancel">
-    //           <a>
-    //             <span class="icon is-small"><i class="ri-arrow-go-back-line"></i></span>
-    //           </a>
-    //         </li>
-    //         <li buttonaction="delete">
-    //           <a>
-    //             <span class="icon is-small"><i class="ri-delete-bin-line"></i></span>
-    //           </a>
-    //         </li>
-    //       </>
-    //     )}
-    //   </ul>
-    // </div>
   )
 }
-
