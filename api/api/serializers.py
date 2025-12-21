@@ -106,10 +106,10 @@ class ExpenseSerializer(serializers.ModelSerializer):
             
         return expense
 
-    def update(self, validated_data):
+    def update(self, instance, validated_data):
         # We need to implement update for shares if 'shares_input' is present
         shares_data = validated_data.pop('shares_input', None)
-        instance = super().update(validated_data)
+        instance = super().update(instance, validated_data)
         
         if shares_data is not None:
              # Logic: update existing shares for these users
