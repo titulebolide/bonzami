@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData, useNavigate, useParams } from "react-router-dom";
 
-import EditButtons from "../components/EditButtons";
 
-let groupid = "accfad71-8456-4ac2-8880-e609e85a52a5"
+
+// Remove old static assignment
+// let groupid = "accfad71-8456-4ac2-8880-e609e85a52a5"
 
 export async function expenseListLoader({ params }) {
   const [expensesRes, groupRes] = await Promise.all([
@@ -26,11 +27,15 @@ function timestampToDate(dateString) {
   return day + "/" + month + "/" + year;
 }
 
-function ExpenseItem({ expense, isCollapsed, onClick }) {
+function ExpenseItem({ expense, isCollapsed, onClick, onEdit }) {
   const categ = expense.categ || { emoji: "🍆", name: "other" }
 
   return (
-    <div onClick={onClick} className="bg-white rounded-lg shadow-md p-4 cursor-pointer">
+    <div onClick={(e) => {
+      // Prevent collapsing if we click buttons? EditButtons handles stopPropagation internally but checks target.
+      onClick()
+    }}
+      className="bg-white rounded-lg shadow-md p-4 cursor-pointer">
       <div className="flex items-center">
         <div className="flex-none grid place-items-center w-10 text-[20px] text-center">
           {categ.emoji}
@@ -68,9 +73,15 @@ function ExpenseItem({ expense, isCollapsed, onClick }) {
           </div>
           <div className="flex-1"></div>
           <div className="flex-none">
-            <EditButtons
-              onClick={() => { }}
-            />
+            <div
+              className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center cursor-pointer transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(expense.id);
+              }}
+            >
+              <i className="ri-pencil-fill text-gray-600 text-lg"></i>
+            </div>
           </div>
         </div>
         <div className="flex">
@@ -95,6 +106,8 @@ function DateHeader({ date }) {
 
 export default function ExpenseList() {
   const [group, expenses] = useLoaderData()
+  const navigate = useNavigate();
+  const params = useParams();
 
   const [collapsedIndex, setCollapsedIndex] = useState(null)
 
@@ -121,6 +134,9 @@ export default function ExpenseList() {
                     setCollapsedIndex(
                       collapsedIndex === expense.id ? null : expense.id
                     )
+                  }}
+                  onEdit={(eid) => {
+                    navigate(`/g/${params.guid}/e/${eid}/edit`)
                   }}
                 />
               </div>
