@@ -101,18 +101,6 @@ export default function ExpenseEditor() {
 
   return (
     <div className="max-w-2xl mx-auto p-6 pb-24 font-sans">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-extrabold text-gray-800 tracking-tight">
-          {expense ? "Edit Expense" : "New Expense"}
-        </h1>
-        <button
-          onClick={() => navigate(-1)}
-          className="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200 text-gray-500"
-        >
-          <i className="ri-close-line text-2xl"></i>
-        </button>
-      </div>
-
       <div className="space-y-6">
         {/* Name Input */}
         <div className="group">

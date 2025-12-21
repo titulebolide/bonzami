@@ -115,9 +115,7 @@ export default function ExpenseList() {
 
   return (
     <>
-      <div className="sticky top-0 z-50 bg-white shadow-sm">
-        <div className="p-4 text-4xl font-bold">{group.name}</div>
-      </div>
+
       <div id="expense-list">
         {
           expenses.map((expense) => {

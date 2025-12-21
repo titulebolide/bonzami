@@ -9,18 +9,7 @@ export async function expenseLoader({ params }) {
   return dat
 }
 
-function ToolHeader({ leftIcon, leftIconOnClick, rightIcon, rightIconOnClick }) {
-  return (
-    <div className="w-full flex justify-between border-b-2 border-gray-400">
-      <div className="text-2xl px-5 rounded-[8px] m-[7px] duration-200 cursor-pointer hover:bg-gray-200" onClick={leftIconOnClick}>
-        <i className={leftIcon}></i>
-      </div>
-      <div className="text-2xl px-5 rounded-[8px] m-[7px] duration-200 cursor-pointer hover:bg-gray-200" onClick={rightIconOnClick}>
-        <i className={rightIcon}></i>
-      </div>
-    </div>
-  )
-}
+
 
 export default function Expense() {
   const expense = useLoaderData();
@@ -28,12 +17,6 @@ export default function Expense() {
   console.log(params)
   return (
     <>
-      <ToolHeader
-        leftIcon="ri-arrow-left-line"
-        leftIconOnClick={() => { window.location = `/g/${params.guid}` }}
-        rightIcon="ri-pencil-fill"
-        rightIconOnClick={() => { window.location = `/g/${params.guid}/e/${params.expenseid}/edit` }}
-      />
       <div className="bg-white rounded-lg shadow-md p-4 m-4">
         <div className="flex justify-between items-center">
           <div className="flex-1">
