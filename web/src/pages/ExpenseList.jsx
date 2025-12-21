@@ -7,16 +7,17 @@ let groupid = "accfad71-8456-4ac2-8880-e609e85a52a5"
 
 export async function expenseListLoader({ params }) {
   const [expensesRes, groupRes] = await Promise.all([
-    fetch("http://127.0.0.1:8000/api/g/" + params.guid + "/allexpenses"),
-    fetch("http://127.0.0.1:8000/api/g/" + params.guid + "/info"),
+    fetch("http://127.0.0.1:8000/api/expenses/?group=" + params.guid),
+    fetch("http://127.0.0.1:8000/api/groups/" + params.guid + "/"),
   ])
   let groupData = await groupRes.json()
   let expensesData = await expensesRes.json()
-  return [groupData, expensesData.data]
+  // expensesData is now the list directly
+  return [groupData, expensesData]
 }
 
-function timestampToDate(timestamp) {
-  var date = new Date(timestamp * 1000); // Convert seconds to milliseconds
+function timestampToDate(dateString) {
+  var date = new Date(dateString); // Handle ISO string
 
   var day = ("0" + date.getDate()).slice(-2);
   var month = ("0" + (date.getMonth() + 1)).slice(-2); // Months are 0-11 in JavaScript
@@ -26,15 +27,17 @@ function timestampToDate(timestamp) {
 }
 
 function ExpenseItem({ expense, isCollapsed, onClick }) {
+  const categ = expense.categ || { emoji: "🍆", name: "other" }
+
   return (
     <div onClick={onClick} className="bg-white rounded-lg shadow-md p-4 cursor-pointer">
       <div className="flex items-center">
         <div className="flex-none grid place-items-center w-10 text-[20px] text-center">
-          {expense.categ.emoji}
+          {categ.emoji}
         </div>
         <div className="flex-1 px-3">
           <div><strong>{expense.name}</strong></div>
-          <div><span className="text-gray-400">paid by </span>{expense.by.name}</div>
+          <div><span className="text-gray-400">paid by </span>{expense.by_uname}</div>
         </div>
         <div className="flex-none grid place-items-center text-right text-[20px]">
           <span>
@@ -46,7 +49,7 @@ function ExpenseItem({ expense, isCollapsed, onClick }) {
         <div className="flex mt-4">
           <div className="flex-none w-10 text-[20px] text-center">
             <div className="mx-auto text-[17px] tracking-[3px] uppercase [writing-mode:vertical-rl] rotate-180">
-              {expense.categ.name}
+              {categ.name}
             </div>
           </div>
           <div className="w-1/3 px-3">
@@ -100,7 +103,7 @@ export default function ExpenseList() {
   return (
     <>
       <div className="sticky top-0 z-50 bg-white shadow-sm">
-        <div className="p-4 text-4xl font-bold">{group.gname}</div>
+        <div className="p-4 text-4xl font-bold">{group.name}</div>
       </div>
       <div id="expense-list">
         {

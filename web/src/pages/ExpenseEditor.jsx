@@ -1,7 +1,7 @@
 import { useLoaderData } from "react-router-dom";
 
 export async function expenseEditorLoader({ params }) {
-  const groupData = await fetch("http://127.0.0.1:8000/api/g/" + params.guid + "/info")
+  const groupData = await fetch("http://127.0.0.1:8000/api/groups/" + params.guid + "/")
   return await groupData.json()
 }
 

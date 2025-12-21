@@ -7,7 +7,6 @@ function RoundButton({ size, icon, onClick = () => { }, subClass = "", shadow = 
       onClick={(e) => {
         e.stopPropagation()
         onClick(e)
-        console.log("prout")
       }}
       className={`rounded-full grid place-items-center cursor-pointer bg-white transition-shadow duration-150 ease-out ${subClass} ${shadow ? "shadow-[0_3px_7px_rgba(0,0,0,0.2)]" : ""}`}
       style={{ height: size + "px", width: size + "px" }}>

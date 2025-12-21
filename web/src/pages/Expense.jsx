@@ -1,10 +1,11 @@
 import { useLoaderData, useParams } from "react-router-dom";
 
 export async function expenseLoader({ params }) {
-  const res = await fetch("http://127.0.0.1:8000/api/g/" + params.guid + "/e/" + params.expenseid + "/info")
-  let dat = res.json()
-  dat.guid = params.guid
-  dat.expenseid = params.expenseid
+  const res = await fetch("http://127.0.0.1:8000/api/expenses/" + params.expenseid + "/")
+  let dat = await res.json()
+  // dat.guid = params.guid // Not needed if layout handles it, or rely on params in component
+  // dat.expenseid = params.expenseid 
+  // Component uses useLoaderData which returns dat. But Component also uses useParams()
   return dat
 }
 

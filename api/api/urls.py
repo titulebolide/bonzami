@@ -1,13 +1,11 @@
-from django.urls import path
-
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
 
+router = DefaultRouter()
+router.register(r'groups', views.GroupViewSet, basename='group')
+router.register(r'expenses', views.ExpenseViewSet, basename='expense')
+
 urlpatterns = [
-    path("addgroup", views.create_group),
-    path("g/<uuid:groupid>/info", views.get_group),
-    path("g/<uuid:groupid>/addexpense", views.add_expense),
-    path("g/<uuid:groupid>/allexpenses", views.get_all_expenses),
-    path("g/<uuid:groupid>/e/<int:expenseid>/info", views.get_expense),
-    path("g/<uuid:groupid>/e/<int:expenseid>/edit", views.edit_expense),
-    path("g/<uuid:groupid>/balance", views.get_balance),
+    path('', include(router.urls)),
 ]
