@@ -1,4 +1,7 @@
 body {
+  background: linear-gradient(45deg, #fff5e6, #f3e5f5);
+  margin: 0;
+  height: 100vh;
   font-family: "Montserrat", sans-serif;
   font-optical-sizing: auto;
   font-style: normal;
@@ -24,3 +27,13 @@ body {
   text-align: center;
 }
 
+.place-element-center {
+  display: grid;
+  place-items: center;
+}
+
+.horizontal-ruler {
+  background-color: #909090;
+  height: 1px;
+  width: 100%;
+}

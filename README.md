@@ -1,5 +1,12 @@
 # Road to v0
 
+Text to category
+- zero-shot learning
+- https://huggingface.co/MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7
+
+Emoji picker
+- emoji-mart
+
 :white_check_mark: : done (alpha)
 :art: : frontend done
 :robot: : backend done

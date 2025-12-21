@@ -38,6 +38,11 @@ def add_expense(request, groupid):
     if int(data["by"]) not in group_uids:
         print("by user is not in group")
         return http.HttpResponseBadRequest()
+    
+    category = None
+    if "category" in data:
+        category = int(data["category"])
+
     for share_data in data.getlist("shares"):
         uid, share_num = share_data.split(":")
         if int(uid) not in group_uids:
@@ -50,6 +55,7 @@ def add_expense(request, groupid):
         amount=float(data["amount"]),
         by_id = int(data["by"]),
         group_id = groupid,
+        category_id = category,
     )
     expense.save()
     unseen_uids = list(group_uids)
@@ -107,13 +113,29 @@ def edit_expense(request, groupid, expenseid):
 
 def format_expense_data(expense):
     shares = models.ExpenseShare.objects.filter(expense_id=expense.id)
+    
+    categ_name = "other"
+    categ_id = -1
+    categ_emoji = "🍆"
+    if expense.category is not None:
+        categ_name = expense.category.name
+        categ_id = expense.category.id
+        categ_emoji = expense.category.emoji
+
     return {
         "name" : expense.name,
         "date" : int(dt.datetime.timestamp(expense.date)),
         "amount" : expense.amount,
         "id" : expense.id,
-        "by_iud" : expense.by.id,
-        "by_uname" : expense.by.name,
+        "by" : {
+            "iud" : expense.by.id,
+            "name" : expense.by.name,
+        },
+        "categ" : {
+            "name" : categ_name,
+            "id" : categ_id,
+            "emoji" : categ_emoji,
+        },
         "shares" : [
             {
                 "uid" : share.user.id,

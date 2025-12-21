@@ -31,41 +31,55 @@ function ExpenseItem({ expense, isCollapsed, onClick }) {
   return (
     <div onClick={onClick} className="box">
       <div className="columns" style={{marginBottom:"calc(var(--bulma-column-gap)*-1"}}>
+        <div className="column is-narrow place-element-center">
+          <div style={{"fontSize": 20, "width":40, "textAlign": "center"}}>
+           {expense.categ.emoji}
+          </div>
+        </div>
         <div className="column">
           <div><strong>{expense.name}</strong></div>
-          <div><span className="has-text-grey-light">paid by </span>{expense.by_uname}</div>
+          <div><span className="has-text-grey-light">paid by </span>{expense.by.name}</div>
         </div>
-        <div className="column is-narrow" style={{ textAlign: "right" }}>
-          <div>
-            <strong>{expense.amount}</strong> €
-          </div>
+        <div className="column is-narrow place-element-center" style={{ textAlign: "right", "fontSize": "20px" }}>
+          <span>
+            <strong>{expense.amount.toFixed(2)}</strong> €
+          </span>
         </div>
       </div>
       <div className={"expense-item " + (isCollapsed ? "expense-item-collapsed" : "")}>
         <div className="columns" style={{marginTop: "1em"}}>
+          <div className="column is-narrow">
+            <div style={{"fontSize": 20, "width":40, "textAlign": "center"}}>
+              <div className="horizontal-center category-name">
+              {expense.categ.name}
+              </div>
+            </div>
+          </div>
           <div className="column is-one-third">
-            <p className="title is-5 text-align-center"  >Shares</p>
+            
+            <p className="title is-5">Shares</p>
             {expense.shares.map((share, index) => (
               <div key={index} className="columns is-mobile" style={{ marginBottom: "0.5em" }}>
                 <div className="column">
                   <strong>{share.uname}</strong>
                 </div>
                 <div className="column is-narrow has-text-right">
-                  {share.share} €
+                  {share.share}
                 </div>
               </div>
             ))}
           </div>
           <div className="column"></div>
-        </div>
-        <div className="columns">
-          <div className="column">
-          </div>
           <div className="column is-narrow">
             <EditButtons
               onClick={() => {}}
             />
           </div>
+        </div>
+        <div className="columns">
+          <div className="column">
+          </div>
+          
         </div>
       </div>
     </div>
@@ -74,9 +88,23 @@ function ExpenseItem({ expense, isCollapsed, onClick }) {
 
 function DateHeader({date}) {
   return (
-    <div style={{textAlign:"center", paddingTop: "2em", paddingBottom: "2em"}}>
-      <h2 className="has-text-weight-bold">{date}</h2>
-    </div>
+    <>
+      <div className="columns" style={{paddingTop: "1em"}} >
+        <div className="column is-1"></div>
+        <div className="column vertical-center">
+          <div className="horizontal-ruler"></div>
+        </div>
+        <div className="column is-narrow">
+          <div>
+            <h2 className="has-text-weight-bold">{date}</h2>
+          </div>
+        </div>
+        <div className="column vertical-center">
+         <div className="horizontal-ruler"></div>
+        </div>
+        <div className="column is-1"></div>
+      </div>
+    </>
   )
 }
 
@@ -111,7 +139,6 @@ export default function ExpenseList() {
                   expense={expense}
                   isCollapsed={collapsedIndex === expense.id}
                   onClick={() => {
-                    console.log("lkjlkjh")
                     setCollapsedIndex(
                       collapsedIndex === expense.id ? null : expense.id
                     )
