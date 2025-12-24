@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useLayoutEffect } from "react";
 import { useLoaderData, useNavigate, useParams } from "react-router-dom";
 
 
@@ -111,17 +111,23 @@ export default function ExpenseList() {
 
   const [collapsedIndex, setCollapsedIndex] = useState(null)
 
-  let prevDate = null
+
+
+  useLayoutEffect(() => {
+    window.scrollTo(0, document.body.scrollHeight)
+  }, [expenses])
 
   return (
     <>
 
-      <div id="expense-list">
+      <div id="expense-list" className="flex flex-col-reverse">
         {
-          expenses.map((expense) => {
+          [...expenses].reverse().map((expense, index, array) => {
             let currDate = timestampToDate(expense.date)
-            let showDate = (currDate !== prevDate)
-            prevDate = currDate
+            let nextExpense = array[index + 1]
+            let nextDate = nextExpense ? timestampToDate(nextExpense.date) : null
+            let showDate = (currDate !== nextDate)
+
             return (
               <div key={expense.id} className="pb-4">
                 {showDate && <DateHeader date={currDate} />}
@@ -142,6 +148,14 @@ export default function ExpenseList() {
           })
         }
       </div>
+
+      {/* Floating Action Button for New Expense */}
+      <button
+        onClick={() => navigate(`/g/${params.guid}/new`)}
+        className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full shadow-lg shadow-blue-500/40 flex items-center justify-center text-white hover:scale-105 active:scale-95 transition-all duration-200 z-40"
+      >
+        <i className="ri-add-line text-3xl"></i>
+      </button>
     </>
   )
 }
