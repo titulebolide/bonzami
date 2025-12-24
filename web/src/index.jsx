@@ -21,6 +21,11 @@ const router = createBrowserRouter([
       },
 
       {
+        path: "/g/:guid/new",
+        element: <ExpenseEditor />,
+        loader: expenseEditorLoader
+      },
+      {
         path: "/g/:guid/e/:expenseid/edit",
         element: <ExpenseEditor />,
         loader: expenseEditorLoader

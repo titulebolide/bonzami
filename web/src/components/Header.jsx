@@ -32,7 +32,7 @@ export default function Header() {
         }
 
         // Determine state based on path
-        if (location.pathname.endsWith("/edit")) {
+        if (location.pathname.endsWith("/edit") || location.pathname.endsWith("/new")) {
             setTitle(params.expenseid ? "Edit Expense" : "New Expense");
             setShowBack(true);
         } else if (params.guid) {
