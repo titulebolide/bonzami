@@ -47,6 +47,32 @@ export default function ExpenseEditor() {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryEmoji, setNewCategoryEmoji] = useState("🍆");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [suggestedCategories, setSuggestedCategories] = useState([]);
+  const [isPredicting, setIsPredicting] = useState(false);
+
+  const fetchPredictions = async () => {
+    if (!name.trim()) return;
+    setIsPredicting(true);
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/predict-category/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: name, group: group.id })
+      });
+      if (res.ok) {
+        const predictions = await res.json();
+        // Match IDs with full category objects
+        const resolvedCats = predictions
+          .map(p => categories.find(c => c.id === p.id))
+          .filter(Boolean);
+        setSuggestedCategories(resolvedCats);
+      }
+    } catch (e) {
+      console.error("Prediction failed", e);
+    } finally {
+      setIsPredicting(false);
+    }
+  };
 
   // Shares: map of uid -> share value. 
   // Initial shares from expense, or all 1 for new?
@@ -169,6 +195,7 @@ export default function ExpenseEditor() {
               placeholder="What is this for?"
               value={name}
               onChange={e => setName(e.target.value)}
+              onBlur={() => fetchPredictions()}
               autoFocus={!expense}
             />
           </div>
@@ -250,6 +277,34 @@ export default function ExpenseEditor() {
               <i className="ri-add-line text-xl"></i>
             </button>
           </div>
+          {isPredicting && (
+            <div className="flex gap-2 mt-2">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="h-8 w-24 bg-gray-100 rounded-lg animate-pulse"></div>
+              ))}
+            </div>
+          )}
+          {suggestedCategories.length > 0 && !isPredicting && (
+            <div className="flex gap-2 mt-2 overflow-x-auto pb-2 scrollbar-hide">
+              {suggestedCategories.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => {
+                    setCategoryId(cat.id)
+                  }}
+                  className="flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-sm font-medium border border-blue-100 hover:bg-blue-100 transition-colors whitespace-nowrap"
+                >
+                  <span>{cat.emoji}</span>
+                  <span>{cat.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {!isPredicting && suggestedCategories.length === 0 && (
+            <div className="mt-2 text-sm text-gray-400 italic pl-1">
+              Enter a description to get suggestions
+            </div>
+          )}
         </div>
 
         {/* Category Creation Modal */}
