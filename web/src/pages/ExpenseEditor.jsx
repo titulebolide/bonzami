@@ -1,24 +1,29 @@
 import { useLoaderData, useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
+import EmojiPicker from 'emoji-picker-react';
 
 export async function expenseEditorLoader({ params }) {
   const groupReq = fetch("http://127.0.0.1:8000/api/groups/" + params.guid + "/")
+  const categoriesReq = fetch("http://127.0.0.1:8000/api/categories/?group=" + params.guid)
+
   let expenseData = null
   if (params.expenseid) {
     const expenseReq = fetch("http://127.0.0.1:8000/api/expenses/" + params.expenseid + "/")
-    const [groupRes, expenseRes] = await Promise.all([groupReq, expenseReq])
+    const [groupRes, categoriesRes, expenseRes] = await Promise.all([groupReq, categoriesReq, expenseReq])
     const group = await groupRes.json()
+    const categories = await categoriesRes.json()
     const expense = await expenseRes.json()
-    return { group, expense }
+    return { group, categories, expense }
   } else {
-    const groupRes = await groupReq
+    const [groupRes, categoriesRes] = await Promise.all([groupReq, categoriesReq])
     const group = await groupRes.json()
-    return { group, expense: null }
+    const categories = await categoriesRes.json()
+    return { group, categories, expense: null }
   }
 }
 
 export default function ExpenseEditor() {
-  const { group, expense } = useLoaderData();
+  const { group, categories: initialCategories, expense } = useLoaderData();
   const navigate = useNavigate();
   const params = useParams();
 
@@ -30,6 +35,18 @@ export default function ExpenseEditor() {
   // Payer ID. If new, default to first user or empty? Default to first user ID to be safe.
   const userIds = Object.keys(group.uids);
   const [payer, setPayer] = useState(expense ? expense.by : (userIds.length > 0 ? userIds[0] : ""));
+
+  // Category State
+  // expense.categ is an object {id, name, emoji} or null/undefined
+  // We want to store the ID but display name/emoji.
+  // Or keep the whole object? Best to keep ID for submission, but need object for UI.
+  // Let's keep ID in state.
+  const [categories, setCategories] = useState(initialCategories || []);
+  const [categoryId, setCategoryId] = useState(expense && expense.categ ? expense.categ.id : (initialCategories && initialCategories.length > 0 ? initialCategories[0].id : null));
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryEmoji, setNewCategoryEmoji] = useState("🍆");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   // Shares: map of uid -> share value. 
   // Initial shares from expense, or all 1 for new?
@@ -69,7 +86,8 @@ export default function ExpenseEditor() {
       by: parseInt(payer),
       group: group.id,
       date: expense ? expense.date : new Date().toISOString(), // Preserve date on edit, new date on create
-      shares_input: sharesInput
+      shares_input: sharesInput,
+      category_id: categoryId
     };
 
     let url = "http://127.0.0.1:8000/api/expenses/";
@@ -96,6 +114,40 @@ export default function ExpenseEditor() {
     } catch (e) {
       console.error(e);
       alert("Error saving expense");
+    }
+  }
+
+  const handleSaveCategory = async () => {
+    if (!newCategoryName) return;
+
+    const payload = {
+      name: newCategoryName,
+      emoji: newCategoryEmoji,
+      group: group.id
+    }
+
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/categories/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      })
+      if (res.ok) {
+        const newCat = await res.json()
+        setCategories([...categories, newCat])
+        setCategoryId(newCat.id)
+        setIsCategoryModalOpen(false)
+        setNewCategoryName("")
+        setNewCategoryEmoji("🍆")
+      } else {
+        console.error(await res.text())
+        alert("Failed to create category")
+      }
+    } catch (e) {
+      console.error(e)
+      alert("Failed to create category")
     }
   }
 
@@ -165,6 +217,92 @@ export default function ExpenseEditor() {
             </div>
           </div>
         </div>
+
+        {/* Category Input */}
+        <div className="group">
+          <label className="block text-sm font-medium text-gray-500 mb-1 transition-colors group-focus-within:text-blue-600">
+            Category
+          </label>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <select
+                className="block w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 appearance-none font-medium cursor-pointer"
+                value={categoryId || ""}
+                onChange={e => setCategoryId(parseInt(e.target.value))}
+              >
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.emoji} {cat.name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 text-lg">
+                {categoryId && categories.find(c => c.id === categoryId)?.emoji}
+              </div>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                <i className="ri-arrow-down-s-line"></i>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsCategoryModalOpen(true)}
+              className="flex-none aspect-square h-[50px] border border-gray-200 rounded-xl bg-gray-50 text-gray-600 hover:bg-gray-100 active:bg-gray-200 flex items-center justify-center transition-colors"
+            >
+              <i className="ri-add-line text-xl"></i>
+            </button>
+          </div>
+        </div>
+
+        {/* Category Creation Modal */}
+        {isCategoryModalOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl animate-in fade-in zoom-in duration-200">
+              <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 className="font-bold text-lg text-gray-800">New Category</h3>
+                <button onClick={() => setIsCategoryModalOpen(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200">
+                  <i className="ri-close-line"></i>
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="flex justify-center">
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      className="w-24 h-24 rounded-full bg-gray-50 border-2 border-dashed border-gray-300 flex items-center justify-center text-5xl hover:bg-gray-100 hover:border-gray-400 transition-all"
+                    >
+                      {newCategoryEmoji}
+                    </button>
+                    {showEmojiPicker && (
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 shadow-2xl rounded-2xl">
+                        <EmojiPicker
+                          onEmojiClick={(emojiData) => {
+                            setNewCategoryEmoji(emojiData.emoji);
+                            setShowEmojiPicker(false);
+                          }}
+                          width={300}
+                          height={400}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Name</label>
+                  <input
+                    type="text"
+                    className="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-800 focus:outline-none focus:border-blue-500"
+                    value={newCategoryName}
+                    onChange={e => setNewCategoryName(e.target.value)}
+                    placeholder="Category Name"
+                  />
+                </div>
+              </div>
+              <div className="p-4 bg-gray-50 flex gap-2 rounded-b-2xl">
+                <button onClick={() => setIsCategoryModalOpen(false)} className="flex-1 py-2 rounded-lg font-medium text-gray-600 hover:bg-gray-200">Cancel</button>
+                <button onClick={handleSaveCategory} className="flex-1 py-2 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/30">Create</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Shares Section */}
         <div className="pt-4">

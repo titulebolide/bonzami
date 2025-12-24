@@ -46,6 +46,13 @@ class GroupViewSet(viewsets.ModelViewSet):
         return response.Response({"data": users})
 
 
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = models.Category.objects.all()
+    serializer_class = serializers.CategorySerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_fields = ('group',)
+
+
 class ExpenseViewSet(viewsets.ModelViewSet):
     queryset = models.Expense.objects.all()
     serializer_class = serializers.ExpenseSerializer
