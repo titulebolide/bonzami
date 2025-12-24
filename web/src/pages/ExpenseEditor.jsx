@@ -177,6 +177,13 @@ export default function ExpenseEditor() {
     }
   }
 
+  const isFormValid = name.trim() !== "" &&
+    amount !== "" &&
+    !isNaN(parseFloat(amount)) &&
+    parseFloat(amount) > 0 &&
+    payer !== "" &&
+    categoryId !== null;
+
   return (
     <div className="max-w-2xl mx-auto p-6 pb-24 font-sans">
       <div className="space-y-6">
@@ -403,7 +410,11 @@ export default function ExpenseEditor() {
           </button>
           <button
             onClick={handleSave}
-            className="flex-[2] py-3 px-6 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2"
+            disabled={!isFormValid}
+            className={`flex-[2] py-3 px-6 rounded-xl font-bold transition-all duration-200 flex items-center justify-center gap-2 ${isFormValid
+                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 hover:-translate-y-0.5 active:translate-y-0"
+                : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              }`}
           >
             <i className="ri-check-line text-xl"></i>
             Save Expense
