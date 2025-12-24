@@ -27,7 +27,7 @@ function timestampToDate(dateString) {
   return day + "/" + month + "/" + year;
 }
 
-function ExpenseItem({ expense, isCollapsed, onClick, onEdit }) {
+function ExpenseItem({ expense, isCollapsed, onClick, onEdit, onDelete }) {
   const categ = expense.categ || { emoji: "🍆", name: "other" }
 
   return (
@@ -73,21 +73,30 @@ function ExpenseItem({ expense, isCollapsed, onClick, onEdit }) {
           </div>
           <div className="flex-1"></div>
           <div className="flex-none">
-            <div
-              className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center cursor-pointer transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(expense.id);
-              }}
-            >
-              <i className="ri-pencil-fill text-gray-600 text-lg"></i>
-            </div>
           </div>
         </div>
-        <div className="flex">
-          <div className="flex-1">
-          </div>
-
+        <div className="flex px-3 pb-3 gap-2">
+          <div className="flex-1"></div>
+          <button
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(expense);
+            }}
+          >
+            <i className="ri-delete-bin-line"></i>
+            <span className="font-semibold text-sm">Delete</span>
+          </button>
+          <button
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(expense.id);
+            }}
+          >
+            <i className="ri-pencil-fill"></i>
+            <span className="font-semibold text-sm">Edit</span>
+          </button>
         </div>
       </div>
     </div>
@@ -110,6 +119,32 @@ export default function ExpenseList() {
   const params = useParams();
 
   const [collapsedIndex, setCollapsedIndex] = useState(null)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [expenseToDelete, setExpenseToDelete] = useState(null)
+
+  const handleDeleteClick = (expense) => {
+    setExpenseToDelete(expense)
+    setDeleteModalOpen(true)
+  }
+
+  const performDelete = async () => {
+    if (!expenseToDelete) return;
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/expenses/${expenseToDelete.id}/`, {
+        method: "DELETE"
+      });
+      if (res.ok) {
+        setDeleteModalOpen(false);
+        setExpenseToDelete(null);
+        navigate(0); // Reload data
+      } else {
+        alert("Failed to delete expense");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Failed to delete expense");
+    }
+  }
 
 
 
@@ -142,6 +177,7 @@ export default function ExpenseList() {
                   onEdit={(eid) => {
                     navigate(`/g/${params.guid}/e/${eid}/edit`)
                   }}
+                  onDelete={handleDeleteClick}
                 />
               </div>
             )
@@ -156,6 +192,38 @@ export default function ExpenseList() {
       >
         <i className="ri-add-line text-3xl"></i>
       </button>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="p-6 text-center space-y-4">
+              <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                <i className="ri-delete-bin-line text-3xl"></i>
+              </div>
+              <h3 className="font-bold text-xl text-gray-800">Delete Expense?</h3>
+              <p className="text-gray-500">
+                Are you sure you want to delete <span className="font-bold text-gray-700">"{expenseToDelete?.name}"</span>?
+                <br /><span className="text-sm">This action cannot be undone.</span>
+              </p>
+            </div>
+            <div className="p-4 bg-gray-50 flex gap-2 rounded-b-2xl">
+              <button
+                onClick={() => setDeleteModalOpen(false)}
+                className="flex-1 py-3 rounded-xl font-semibold text-gray-600 hover:bg-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={performDelete}
+                className="flex-1 py-3 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30 transition-all"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
