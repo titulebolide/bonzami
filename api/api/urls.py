@@ -9,4 +9,5 @@ router.register(r'expenses', views.ExpenseViewSet, basename='expense')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('predict-category/', views.PredictCategoryView.as_view({'post': 'create'}), name='predict-category'),
 ]

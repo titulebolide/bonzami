@@ -4,6 +4,15 @@ from django_filters import rest_framework as filters
 from django.shortcuts import get_object_or_404
 from . import models, serializers
 import datetime as dt
+from transformers import pipeline
+
+classifier = None
+
+def get_classifier():
+    global classifier
+    if classifier is None:
+        classifier = pipeline("zero-shot-classification", model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
+    return classifier
 
 class GroupViewSet(viewsets.ModelViewSet):
     queryset = models.Group.objects.all()
@@ -65,3 +74,54 @@ class ExpenseViewSet(viewsets.ModelViewSet):
     @decorators.action(detail=True, methods=['get'])
     def info(self, request, pk=None):
         return self.retrieve(request)
+
+
+class PredictCategoryView(viewsets.ViewSet):
+    def create(self, request):
+        title = request.data.get('title')
+        group_id = request.data.get('group')
+        
+        if not title or not group_id:
+            return response.Response(
+                {"error": "Both 'title' and 'group' are required."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        categories = models.Category.objects.filter(group_id=group_id)
+        if not categories.exists():
+             return response.Response(
+                {"error": "No categories found for this group."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        candidate_labels = [c.name for c in categories]
+        
+        try:
+            clf = get_classifier()
+            output = clf(title, candidate_labels, multi_label=False)
+            
+            # Create a lookup for categories by name
+            category_map = {c.name: c for c in categories}
+            
+            # Zip labels and scores, take top 4
+            results = []
+            predictions = list(zip(output['labels'], output['scores']))
+            
+            # Sort just in case, though usually returned sorted
+            predictions.sort(key=lambda x: x[1], reverse=True)
+            
+            for label, score in predictions[:4]:
+                cat = category_map.get(label)
+                if cat:
+                    results.append({
+                        "id": cat.id,
+                        "score": score
+                    })
+            
+            return response.Response(results)
+            
+        except Exception as e:
+            return response.Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
