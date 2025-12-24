@@ -253,19 +253,16 @@ export default function ExpenseEditor() {
           <div className="flex gap-2">
             <div className="relative flex-1">
               <select
-                className="block w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 appearance-none font-medium cursor-pointer"
+                className="block w-full pl-3 pr-10 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 appearance-none font-medium cursor-pointer"
                 value={categoryId || ""}
                 onChange={e => setCategoryId(parseInt(e.target.value))}
               >
                 {categories.map(cat => (
                   <option key={cat.id} value={cat.id}>
-                    {cat.emoji} {cat.name}
+                    {cat.emoji}{"\u00A0\u00A0\u00A0"}{cat.name}
                   </option>
                 ))}
               </select>
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 text-lg">
-                {categoryId && categories.find(c => c.id === categoryId)?.emoji}
-              </div>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
                 <i className="ri-arrow-down-s-line"></i>
               </div>
