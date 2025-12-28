@@ -114,9 +114,31 @@ function DateHeader({ date }) {
 }
 
 export default function ExpenseList() {
-  const [group, expenses] = useLoaderData()
+  const [group, initialData] = useLoaderData()
   const navigate = useNavigate();
   const params = useParams();
+
+  const [expenses, setExpenses] = useState(initialData.results || initialData || []);
+  const [nextPage, setNextPage] = useState(initialData.next);
+  const [loading, setLoading] = useState(false);
+
+  // We need to fetch initial data if it's the first load, to ensure we have the paginated structure if the loader ran before backend update (race condition) or just consistency.
+  // Actually loader data structure might have changed.
+  // API now returns { count, next, previous, results: [] }
+
+  useEffect(() => {
+    // Re-sync if needed or just trust loader.
+    // Loader runs on navigation.
+    if (initialData.results) {
+      setExpenses(initialData.results);
+      setNextPage(initialData.next);
+      // Reset scroll behavior?
+    } else {
+      // Fallback if API hasn't updated yet or something
+      setExpenses(initialData);
+    }
+  }, [initialData]);
+
 
   const [collapsedIndex, setCollapsedIndex] = useState(null)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
@@ -147,24 +169,55 @@ export default function ExpenseList() {
   }
 
 
+  const loadMore = async () => {
+    if (!nextPage || loading) return;
+    setLoading(true);
 
-  useLayoutEffect(() => {
-    window.scrollTo(0, document.body.scrollHeight)
-  }, [expenses])
+    try {
+      const res = await fetch(nextPage);
+      const data = await res.json();
+
+      // If we are at the very top, browser disables overflow-anchor.
+      // Nudge it down 1px to enable anchoring so we maintain position relative to the content we are viewing.
+      if (window.scrollY === 0) {
+        window.scrollBy(0, 1);
+      }
+
+      setExpenses(prev => [...prev, ...data.results]); // Appending to end of list variable (which is top of UI because of flex-reverse)
+      setNextPage(data.next);
+    } catch (e) {
+      console.error("Failed to load more", e);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Detect scroll to top
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY < 100 && nextPage && !loading) {
+        loadMore();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [nextPage, loading]);
 
   return (
     <>
 
       <div id="expense-list" className="flex flex-col-reverse">
+        {loading && <div className="text-center p-4 text-gray-400">Loading history...</div>}
         {
-          [...expenses].reverse().map((expense, index, array) => {
+          expenses.map((expense, index, array) => {
             let currDate = timestampToDate(expense.date)
             let nextExpense = array[index + 1]
             let nextDate = nextExpense ? timestampToDate(nextExpense.date) : null
             let showDate = (currDate !== nextDate)
 
             return (
-              <div key={expense.id} className="pb-4">
+              <div key={expense.id} className="pb-4 flex flex-col font-sans">
                 {showDate && <DateHeader date={currDate} />}
                 <ExpenseItem
                   expense={expense}

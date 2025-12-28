@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status, decorators, response
+from rest_framework import viewsets, status, decorators, response, pagination
 from rest_framework import filters as drf_filters
 from django_filters import rest_framework as filters
 from django.shortcuts import get_object_or_404
@@ -61,12 +61,20 @@ class CategoryViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('group',)
 
+    filterset_fields = ('group',)
+
+
+class AppPagination(pagination.PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+
 
 class ExpenseViewSet(viewsets.ModelViewSet):
-    queryset = models.Expense.objects.all()
+    queryset = models.Expense.objects.all().order_by('-date', '-id')
     serializer_class = serializers.ExpenseSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('group',)
+    pagination_class = AppPagination
 
     # Creation and Update logic is now in Serializer.
     # No custom create() or update() needed here!
