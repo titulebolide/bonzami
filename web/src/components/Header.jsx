@@ -8,15 +8,9 @@ export default function Header() {
 
     const [title, setTitle] = useState("Bonzami"); // Default title
     const [showBack, setShowBack] = useState(false);
-    const [showStats, setShowStats] = useState(false);
+    const [showTabs, setShowTabs] = useState(false);
 
     // Fetch group name if we have a guid and we are on the list page (root of group)
-    // Or maybe always fetch it to show it?
-    // Logic: 
-    // - List: Title = Group Name. Back = Hidden.
-    // - Details: Title = "Expense Details". Back = Visible.
-    // - Editor: Title = "Edit Expense" / "New Expense". Back = Visible.
-
     useEffect(() => {
         async function fetchGroup() {
             if (params.guid) {
@@ -36,52 +30,81 @@ export default function Header() {
         if (location.pathname.endsWith("/edit") || location.pathname.endsWith("/new")) {
             setTitle(params.expenseid ? "Edit Expense" : "New Expense");
             setShowBack(true);
-            setShowStats(false);
+            setShowTabs(false);
         } else if (params.guid) {
-            // List page
+            // Main Group Views (List, Stats, Settle Up)
             setShowBack(false);
-            setShowStats(true);
+            setShowTabs(true);
             fetchGroup();
         } else {
             // Root or unknown
             setTitle("Bonzami");
             setShowBack(false);
-            setShowStats(false);
+            setShowTabs(false);
         }
     }, [location.pathname, params.guid, params.expenseid]);
 
+
+    const isTabActive = (path) => {
+        if (path === "") return location.pathname === `/g/${params.guid}`;
+        return location.pathname.includes(path);
+    }
+
     return (
-        <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100 transition-all duration-300">
-            <div className="max-w-[600px] mx-auto px-4 h-16 relative flex items-center justify-between">
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                    <h1 className="text-xl font-bold text-gray-800 tracking-tight">
-                        {title}
-                    </h1>
-                </div>
+        <>
+            {/* Main Header Bar */}
+            <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100 transition-all duration-300">
+                <div className="max-w-[600px] mx-auto px-4 h-16 relative flex items-center justify-between">
 
-                <div className="flex items-center z-10">
-                    {showBack && (
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="p-2 -ml-2 rounded-full hover:bg-gray-100/80 text-gray-600 transition-colors"
-                        >
-                            <i className="ri-arrow-left-line text-xl"></i>
-                        </button>
-                    )}
-                </div>
+                    {/* Back Button (Left) */}
+                    <div className="flex items-center z-10 w-10">
+                        {showBack && (
+                            <button
+                                onClick={() => navigate(-1)}
+                                className="p-2 -ml-2 rounded-full hover:bg-gray-100/80 text-gray-600 transition-colors"
+                            >
+                                <i className="ri-arrow-left-line text-xl"></i>
+                            </button>
+                        )}
+                    </div>
 
-                {/* Placeholder for right-side actions if needed */}
-                <div className="w-8 flex justify-end">
-                    {showStats && (
-                        <button
-                            onClick={() => navigate(`/g/${params.guid}/stats`)}
-                            className="p-2 -mr-2 rounded-full hover:bg-gray-100/80 text-gray-600 transition-colors"
-                        >
-                            <i className="ri-bar-chart-fill text-xl"></i>
-                        </button>
-                    )}
+                    {/* Title (Center) */}
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none max-w-[60%]">
+                        <h1 className="text-xl font-bold text-gray-800 tracking-tight truncate">
+                            {title}
+                        </h1>
+                    </div>
+
+                    {/* Right Placeholder */}
+                    <div className="w-10"></div>
                 </div>
             </div>
-        </div>
+
+            {/* Tabs (Floating Underneath) */}
+            {showTabs && params.guid && (
+                <div className="sticky top-[4.5rem] z-40 max-w-[600px] mx-auto px-4 mt-2">
+                    <div className="flex bg-gray-100/90 backdrop-blur-sm p-1 rounded-xl shadow-sm border border-gray-200/50">
+                        <button
+                            onClick={() => navigate(`/g/${params.guid}`)}
+                            className={`flex-1 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${isTabActive("") && !isTabActive("stats") && !isTabActive("settle-up") ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/50"}`}
+                        >
+                            List
+                        </button>
+                        <button
+                            onClick={() => navigate(`/g/${params.guid}/settle-up`)}
+                            className={`flex-1 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${isTabActive("settle-up") ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/50"}`}
+                        >
+                            Settle Up
+                        </button>
+                        <button
+                            onClick={() => navigate(`/g/${params.guid}/stats`)}
+                            className={`flex-1 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${isTabActive("stats") ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/50"}`}
+                        >
+                            Stats
+                        </button>
+                    </div>
+                </div>
+            )}
+        </>
     );
 }

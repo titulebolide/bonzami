@@ -7,6 +7,7 @@ import ExpenseList, { expenseListLoader } from "./pages/ExpenseList"
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import ExpenseEditor, { expenseEditorLoader } from "./pages/ExpenseEditor";
 import StatsView, { statsLoader } from "./pages/StatsView";
+import SettleUpView, { settleUpLoader } from "./pages/SettleUpView";
 import CustomContainer from "./pages/CustomContainer";
 
 
@@ -35,6 +36,11 @@ const router = createBrowserRouter([
         path: "/g/:guid/stats",
         element: <StatsView />,
         loader: statsLoader
+      },
+      {
+        path: "/g/:guid/settle-up",
+        element: <SettleUpView />,
+        loader: settleUpLoader
       }
     ]
   }

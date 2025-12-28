@@ -6,65 +6,21 @@ import {
 } from 'recharts';
 
 export async function statsLoader({ params }) {
-    const [statsRes, groupRes, balanceRes] = await Promise.all([
+    const [statsRes, groupRes] = await Promise.all([
         fetch(`http://127.0.0.1:8000/api/groups/${params.guid}/stats/`),
-        fetch(`http://127.0.0.1:8000/api/groups/${params.guid}/`),
-        fetch(`http://127.0.0.1:8000/api/groups/${params.guid}/balance/`)
+        fetch(`http://127.0.0.1:8000/api/groups/${params.guid}/`)
     ]);
 
     const stats = await statsRes.json();
     const group = await groupRes.json();
-    const balanceData = await balanceRes.json();
 
-    return { initialStats: stats, group, balance: balanceData.data, groupId: params.guid };
-}
-
-function calculateDebts(balanceData) {
-    let debtors = [];
-    let creditors = [];
-
-    Object.entries(balanceData).forEach(([uid, data]) => {
-        const bal = data.balance;
-        if (bal > 0.01) {
-            debtors.push({ uid, name: data.uname, amount: bal });
-        } else if (bal < -0.01) {
-            creditors.push({ uid, name: data.uname, amount: -bal });
-        }
-    });
-
-    debtors.sort((a, b) => b.amount - a.amount);
-    creditors.sort((a, b) => b.amount - a.amount);
-
-    const debts = [];
-    let i = 0;
-    let j = 0;
-
-    while (i < debtors.length && j < creditors.length) {
-        let debtor = debtors[i];
-        let creditor = creditors[j];
-        let amount = Math.min(debtor.amount, creditor.amount);
-
-        if (amount < 0.01) {
-            if (debtor.amount < 0.01) i++;
-            if (creditor.amount < 0.01) j++;
-            continue;
-        }
-
-        debts.push({ from: debtor.name, to: creditor.name, amount: amount });
-        debtor.amount -= amount;
-        creditor.amount -= amount;
-
-        if (debtor.amount < 0.01) i++;
-        if (creditor.amount < 0.01) j++;
-    }
-
-    return debts;
+    return { initialStats: stats, group, groupId: params.guid };
 }
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 export default function StatsView() {
-    const { initialStats, group, balance, groupId } = useLoaderData();
+    const { initialStats, group, groupId } = useLoaderData();
     const navigate = useNavigate();
 
     // State for dynamic stats
@@ -72,8 +28,7 @@ export default function StatsView() {
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [loadingTimeline, setLoadingTimeline] = useState(false);
 
-    // Debts are static from load
-    const debts = calculateDebts(balance);
+
 
     // Handle category filter change
     useEffect(() => {
@@ -130,35 +85,6 @@ export default function StatsView() {
                 </div>
             </div>
 
-            {/* Reimbursement Plan */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-5 border-b border-gray-50">
-                    <h3 className="font-bold text-lg text-gray-800 flex items-center gap-2">
-                        <i className="ri-exchange-funds-line text-blue-500"></i>
-                        How to Settle Up
-                    </h3>
-                </div>
-                <div className="divide-y divide-gray-50">
-                    {debts.length === 0 ? (
-                        <div className="p-8 text-center text-gray-400 italic">
-                            All settled up! No debts found.
-                        </div>
-                    ) : (
-                        debts.map((debt, i) => (
-                            <div key={i} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                                <div className="flex items-center gap-3">
-                                    <div className="font-bold text-gray-700">{debt.from}</div>
-                                    <div className="text-gray-400 text-xs">pays</div>
-                                    <div className="font-bold text-gray-700">{debt.to}</div>
-                                </div>
-                                <div className="font-mono font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full text-sm">
-                                    {debt.amount.toFixed(2)}€
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </div>
 
             {/* Expense Accumulation Graph */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
@@ -246,16 +172,6 @@ export default function StatsView() {
                 </div>
             </div>
 
-            {/* Floating Action Button Back */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-gray-200 flex justify-center z-50">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="w-full max-w-sm py-3 px-6 rounded-xl border border-gray-200 text-gray-600 font-semibold hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 flex items-center justify-center gap-2"
-                >
-                    <i className="ri-arrow-left-line"></i>
-                    Back to Expenses
-                </button>
-            </div>
 
         </div>
     );
