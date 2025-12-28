@@ -13,7 +13,8 @@ classifier = None
 def get_classifier():
     global classifier
     if classifier is None:
-        classifier = pipeline("zero-shot-classification", model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
+        classifier = pipeline("zero-shot-classification", model="cmarkea/distilcamembert-base-nli", tokenizer="cmarkea/distilcamembert-base-nli")
+        # classifier = pipeline("zero-shot-classification", model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
     return classifier
 
 class GroupViewSet(viewsets.ModelViewSet):
@@ -180,7 +181,7 @@ class PredictCategoryView(viewsets.ViewSet):
         
         try:
             clf = get_classifier()
-            output = clf(title, candidate_labels, multi_label=False)
+            output = clf(title, candidate_labels, hypothesis_template="Cette description parle de {}.", multi_label=False)
             
             # Create a lookup for categories by name
             category_map = {c.name: c for c in categories}
