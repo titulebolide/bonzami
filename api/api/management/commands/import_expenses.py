@@ -39,13 +39,18 @@ class Command(BaseCommand):
                     if req not in fieldnames:
                         raise CommandError(f"Missing required column: {req}")
                 
-                # Share columns are everything else
-                share_columns = [
-                    fn for fn in fieldnames 
-                    if fn not in required_fields
-                ]
+                # Identify Share Columns (must start with "share_")
+                share_columns = {} # map column_name -> user_name
+                for fn in fieldnames:
+                    if fn.lower().startswith('share_'):
+                        user_name = fn[6:] # strip 'share_'
+                        share_columns[fn] = user_name
                 
-                self.stdout.write(f"Identified share columns (Users): {share_columns}")
+                self.stdout.write(f"Identified share columns: {list(share_columns.keys())}")
+                self.stdout.write(f"Mapped to users: {list(share_columns.values())}")
+                
+                if not share_columns:
+                     self.stdout.write(self.style.WARNING("No share columns found (starting with 'share_')."))
                 
                 # Create a new Group for this import
                 timestamp = timezone.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -54,11 +59,12 @@ class Command(BaseCommand):
                 self.stdout.write(f"Created new Group: '{group_name}' (ID: {new_group.id})")
                 
                 # Cache for users created in this session
-                # keys: user name (stripped), values: User object
                 created_users = {}
 
                 def get_or_create_import_user(name):
                     clean_name = name.strip()
+                    if not clean_name:
+                         return None
                     if clean_name in created_users:
                         return created_users[clean_name]
                     
@@ -95,13 +101,16 @@ class Command(BaseCommand):
 
                     # Get or Create Payer
                     payer = get_or_create_import_user(payer_name)
+                    if not payer:
+                         self.stderr.write(f"Row {row_idx}: Invalid payer name '{payer_name}', skipping.")
+                         continue
                         
                     # Calculate Shares
                     shares = {}
                     total_share_val = 0.0
                     
-                    for user_name in share_columns:
-                        val_str = row.get(user_name, '0').strip()
+                    for col_name, user_name in share_columns.items():
+                        val_str = row.get(col_name, '0').strip()
                         if not val_str: 
                             val_str = '0'
                         try:
@@ -110,7 +119,7 @@ class Command(BaseCommand):
                                 shares[user_name] = val
                                 total_share_val += val
                         except ValueError:
-                             self.stderr.write(f"Row {row_idx}: Invalid share value for {user_name}: '{val_str}'")
+                             self.stderr.write(f"Row {row_idx}: Invalid share value for {user_name} (col {col_name}): '{val_str}'")
                     
                     if total_share_val <= 0:
                          self.stderr.write(f"Row {row_idx}: No valid shares found, skipping.")
@@ -133,11 +142,12 @@ class Command(BaseCommand):
                     # Create ExpenseShares
                     for u_name, share_val in normalized_shares.items():
                         user = get_or_create_import_user(u_name)
-                        ExpenseShare.objects.create(
-                            user=user,
-                            expense=expense,
-                            share=share_val
-                        )
+                        if user:
+                            ExpenseShare.objects.create(
+                                user=user,
+                                expense=expense,
+                                share=share_val
+                            )
                     
                     success_count += 1
                 
