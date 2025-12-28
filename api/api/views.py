@@ -4,6 +4,8 @@ from django_filters import rest_framework as filters
 from django.shortcuts import get_object_or_404
 from . import models, serializers
 import datetime as dt
+from django.db.models import Sum, F
+from django.db.models.functions import TruncDate
 from transformers import pipeline
 
 classifier = None
@@ -54,6 +56,78 @@ class GroupViewSet(viewsets.ModelViewSet):
             
         return response.Response({"data": users})
 
+    @decorators.action(detail=True, methods=['get'])
+    def stats(self, request, pk=None):
+        group_id = pk
+        category_filter = request.query_params.get('category')
+
+        expenses = models.Expense.objects.filter(group_id=group_id).order_by('date')
+        
+        # 1. Total Expense (Global for the group, or filtered? UI suggests global context usually, but timeline is filtered)
+        # However, if we filter everything by category in the backend, the "Total" card will change when category is selected. 
+        # In the original UI:
+        # - "Total Expenses" card depended on `expenses` array which WAS filtered? 
+        # No, the original `statsLoader` fetched ALL expenses. 
+        # And `totalExpense` was derived from ALL expenses. 
+        # The Filter `selectedCategory` ONLY affected `timelineData`.
+        # `categoryData` (Pie) also used ALL expenses.
+        # So: Backend should return Global Total and Global Category Breakdown.
+        # Timeline should be filtered if requested, or return all.
+        
+        total_expense = expenses.aggregate(total=Sum('amount'))['total'] or 0
+
+        # 2. Category Breakdown (Global)
+        category_stats = expenses.values(
+            cat_name=F('category__name'), 
+            cid=F('category__id')
+        ).annotate(value=Sum('amount')).order_by('-value')
+        
+        # Add "Other" for null categories
+        # Django makes this a bit tricky with values(). 
+        # We can handle None in python or use Coalesce if we really want, but Python is fine for small scale.
+        formatted_categories = []
+        for cat in category_stats:
+            name = cat['cat_name'] if cat['cat_name'] else "Other"
+            formatted_categories.append({
+                "name": name,
+                "value": cat['value'],
+                "id": cat['cid']
+            })
+
+        # 3. Timeline (Filtered if requested)
+        timeline_expenses = expenses
+        if category_filter and category_filter != 'all':
+             if category_filter == "Other":
+                 timeline_expenses = timeline_expenses.filter(category__isnull=True)
+             else:
+                 timeline_expenses = timeline_expenses.filter(category__name=category_filter)
+        
+        # We need daily accumulation.
+        # Original: "Sort ALL expenses by date... Accumulate... Always push a data point"
+        # We can use DB aggregation by Date.
+        daily_stats = timeline_expenses.annotate(
+            day=TruncDate('date')
+        ).values('day').annotate(
+            daily_sum=Sum('amount')
+        ).order_by('day')
+
+        # Accumulate in Python
+        timeline_data = []
+        acc = 0
+        for entry in daily_stats:
+             acc += entry['daily_sum']
+             timeline_data.append({
+                 "date": entry['day'].strftime("%d/%m/%Y"), # Simplified date format matching locale roughly, or use ISO
+                 "fullDate": entry['day'].isoformat(),
+                 "amount": acc,
+                 "daily_sum": entry['daily_sum'] # Extra info might be useful
+             })
+             
+        return response.Response({
+            "total_expense": total_expense,
+            "category_breakdown": formatted_categories,
+            "timeline": timeline_data
+        })
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = models.Category.objects.all()

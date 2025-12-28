@@ -1,44 +1,34 @@
 import { useLoaderData, useNavigate } from "react-router-dom";
-import { useLayoutEffect, useMemo, useState } from "react";
+import { useLayoutEffect, useState, useEffect } from "react";
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-    PieChart, Pie, Cell, Legend, BarChart, Bar
+    PieChart, Pie, Cell, Legend
 } from 'recharts';
 
 export async function statsLoader({ params }) {
-    const [expensesRes, groupRes, balanceRes] = await Promise.all([
-        fetch("http://127.0.0.1:8000/api/expenses/?group=" + params.guid),
-        fetch("http://127.0.0.1:8000/api/groups/" + params.guid + "/"),
-        fetch("http://127.0.0.1:8000/api/groups/" + params.guid + "/balance/")
-    ])
+    const [statsRes, groupRes, balanceRes] = await Promise.all([
+        fetch(`http://127.0.0.1:8000/api/groups/${params.guid}/stats/`),
+        fetch(`http://127.0.0.1:8000/api/groups/${params.guid}/`),
+        fetch(`http://127.0.0.1:8000/api/groups/${params.guid}/balance/`)
+    ]);
 
-    const expenses = await expensesRes.json();
+    const stats = await statsRes.json();
     const group = await groupRes.json();
     const balanceData = await balanceRes.json();
 
-    return { expenses, group, balance: balanceData.data };
+    return { initialStats: stats, group, balance: balanceData.data, groupId: params.guid };
 }
 
 function calculateDebts(balanceData) {
-    // Convert to array of {uid, balance}
     let debtors = [];
     let creditors = [];
 
     Object.entries(balanceData).forEach(([uid, data]) => {
-        // Determine net balance. 
-        // API returns 'balance' = total_expense - total_paid.
-        // If balance is Positive (Expense > Paid), they OWE money. (Debtor)
-        // If balance is Negative (Paid > Expense), they are OWED money. (Creditor)
-        // Wait, let's double check the API logic.
-        // "users[user]["balance"] = round(users[user]["total_expenses"] - users[user]["total_paid"], 2)"
-        // If I spent 100 (expense) but paid 0, balance is +100. I OWE 100. Correct.
-        // If I spent 0 but paid 100, balance is -100. I am OWED 100. Correct.
-
         const bal = data.balance;
         if (bal > 0.01) {
             debtors.push({ uid, name: data.uname, amount: bal });
         } else if (bal < -0.01) {
-            creditors.push({ uid, name: data.uname, amount: -bal }); // Store positive magnitude
+            creditors.push({ uid, name: data.uname, amount: -bal });
         }
     });
 
@@ -46,28 +36,21 @@ function calculateDebts(balanceData) {
     creditors.sort((a, b) => b.amount - a.amount);
 
     const debts = [];
-    let i = 0; // debtor index
-    let j = 0; // creditor index
+    let i = 0;
+    let j = 0;
 
     while (i < debtors.length && j < creditors.length) {
         let debtor = debtors[i];
         let creditor = creditors[j];
-
         let amount = Math.min(debtor.amount, creditor.amount);
 
-        // Safety check for floating point weirdness
         if (amount < 0.01) {
             if (debtor.amount < 0.01) i++;
             if (creditor.amount < 0.01) j++;
             continue;
         }
 
-        debts.push({
-            from: debtor.name,
-            to: creditor.name,
-            amount: amount
-        });
-
+        debts.push({ from: debtor.name, to: creditor.name, amount: amount });
         debtor.amount -= amount;
         creditor.amount -= amount;
 
@@ -81,73 +64,52 @@ function calculateDebts(balanceData) {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 export default function StatsView() {
-    const { expenses, group, balance } = useLoaderData();
+    const { initialStats, group, balance, groupId } = useLoaderData();
     const navigate = useNavigate();
+
+    // State for dynamic stats
+    const [stats, setStats] = useState(initialStats);
     const [selectedCategory, setSelectedCategory] = useState("all");
+    const [loadingTimeline, setLoadingTimeline] = useState(false);
 
-    // Get unique categories for filter
-    const uniqueCategories = useMemo(() => {
-        const cats = new Set();
-        expenses.forEach(e => {
-            if (e.categ) cats.add(e.categ.name);
-            else cats.add("Other");
-        });
-        return Array.from(cats).sort();
-    }, [expenses]);
+    // Debts are static from load
+    const debts = calculateDebts(balance);
 
-    // 1. Total Expense
-    const totalExpense = useMemo(() => {
-        return expenses.reduce((acc, curr) => acc + curr.amount, 0);
-    }, [expenses]);
+    // Handle category filter change
+    useEffect(() => {
+        // Skip first render if it matches initial
+        if (selectedCategory === "all" && stats === initialStats) return;
 
-    // 2. Timeline Data
-    const timelineData = useMemo(() => {
-        // Sort ALL expenses by date to define the full timespan
-        const sorted = [...expenses].sort((a, b) => new Date(a.date) - new Date(b.date));
+        async function fetchFilteredStats() {
+            setLoadingTimeline(true);
+            try {
+                const url = new URL(`http://127.0.0.1:8000/api/groups/${groupId}/stats/`);
+                if (selectedCategory !== "all") {
+                    url.searchParams.append("category", selectedCategory);
+                }
+                const res = await fetch(url);
+                const newStats = await res.json();
 
-        // Accumulate based on selection
-        let acc = 0;
-        const data = [];
-
-        sorted.forEach(e => {
-            // Only add to the running total if it matches the filter
-            const cName = e.categ ? e.categ.name : "Other";
-            const matches = selectedCategory === "all" || cName === selectedCategory;
-
-            if (matches) {
-                acc += e.amount;
+                // We only really need to update the timeline, but the API returns everything.
+                // It's cleaner to update the whole stats object to keep it consistent.
+                setStats(newStats);
+            } catch (err) {
+                console.error("Failed to fetch filtered stats", err);
+            } finally {
+                setLoadingTimeline(false);
             }
+        }
 
-            // Always push a data point to maintain the timeline structure
-            const dateStr = new Date(e.date).toLocaleDateString();
-            data.push({
-                date: dateStr,
-                fullDate: e.date,
-                amount: acc,
-                expenseName: e.name
-            });
-        });
-        return data;
-    }, [expenses, selectedCategory]);
+        fetchFilteredStats();
+    }, [selectedCategory, groupId]);
 
-    // 3. Category Data
-    const categoryData = useMemo(() => {
-        const cats = {};
-        expenses.forEach(e => {
-            const cName = e.categ ? e.categ.name : "Other";
-            if (!cats[cName]) cats[cName] = 0;
-            cats[cName] += e.amount;
-        });
-        return Object.entries(cats).map(([name, value]) => ({ name, value }));
-    }, [expenses]);
 
-    // 4. Debts
-    const debts = useMemo(() => calculateDebts(balance), [balance]);
-
-    // Scroll to top
     useLayoutEffect(() => {
         window.scrollTo(0, 0);
     }, []);
+
+    // Extract data for charts
+    const { total_expense, category_breakdown, timeline } = stats;
 
     return (
         <div className="pb-24 space-y-8 animate-in fade-in duration-500">
@@ -157,13 +119,13 @@ export default function StatsView() {
                 <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-5 text-white shadow-lg shadow-blue-500/20">
                     <div className="text-blue-100 text-sm font-medium mb-1">Total Expenses</div>
                     <div className="text-3xl font-bold">
-                        {totalExpense.toFixed(2)}€
+                        {total_expense.toFixed(2)}€
                     </div>
                 </div>
                 <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-                    <div className="text-gray-500 text-sm font-medium mb-1">Total Transactions</div>
+                    <div className="text-gray-500 text-sm font-medium mb-1">Categories</div>
                     <div className="text-3xl font-bold text-gray-800">
-                        {expenses.length}
+                        {category_breakdown.length}
                     </div>
                 </div>
             </div>
@@ -206,22 +168,24 @@ export default function StatsView() {
                         <select
                             value={selectedCategory}
                             onChange={(e) => setSelectedCategory(e.target.value)}
-                            className="appearance-none data-[active=true]:border-blue-500 data-[active=true]:bg-blue-50 data-[active=true]:text-blue-700 bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-3 pr-8 py-2 font-medium cursor-pointer transition-colors"
+                            disabled={loadingTimeline}
+                            className="appearance-none data-[active=true]:border-blue-500 data-[active=true]:bg-blue-50 data-[active=true]:text-blue-700 bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-3 pr-8 py-2 font-medium cursor-pointer transition-colors disabled:opacity-50"
                             data-active={selectedCategory !== "all"}
                         >
                             <option value="all">All Categories</option>
-                            {uniqueCategories.map(cat => (
-                                <option key={cat} value={cat}>{cat}</option>
+                            {/* We use initialStats for the dropdown options so they don't disappear if we were to return filtered breakdowns */}
+                            {initialStats.category_breakdown.map(cat => (
+                                <option key={cat.name} value={cat.name}>{cat.name}</option>
                             ))}
                         </select>
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                            <i className="ri-arrow-down-s-line"></i>
+                            {loadingTimeline ? <i className="ri-loader-4-line animate-spin"></i> : <i className="ri-arrow-down-s-line"></i>}
                         </div>
                     </div>
                 </div>
                 <div className="h-[250px] w-full -ml-4">
                     <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={timelineData}>
+                        <LineChart data={timeline}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                             <XAxis
                                 dataKey="date"
@@ -260,7 +224,7 @@ export default function StatsView() {
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                             <Pie
-                                data={categoryData}
+                                data={category_breakdown} // Always show full breakdown even if timeline is filtered? Yes, usually better context.
                                 cx="50%"
                                 cy="50%"
                                 innerRadius={60}
@@ -268,7 +232,7 @@ export default function StatsView() {
                                 paddingAngle={5}
                                 dataKey="value"
                             >
-                                {categoryData.map((entry, index) => (
+                                {category_breakdown.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                 ))}
                             </Pie>
