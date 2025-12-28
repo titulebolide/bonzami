@@ -8,6 +8,7 @@ export default function Header() {
 
     const [title, setTitle] = useState("Bonzami"); // Default title
     const [showBack, setShowBack] = useState(false);
+    const [showStats, setShowStats] = useState(false);
 
     // Fetch group name if we have a guid and we are on the list page (root of group)
     // Or maybe always fetch it to show it?
@@ -35,14 +36,17 @@ export default function Header() {
         if (location.pathname.endsWith("/edit") || location.pathname.endsWith("/new")) {
             setTitle(params.expenseid ? "Edit Expense" : "New Expense");
             setShowBack(true);
+            setShowStats(false);
         } else if (params.guid) {
             // List page
             setShowBack(false);
+            setShowStats(true);
             fetchGroup();
         } else {
             // Root or unknown
             setTitle("Bonzami");
             setShowBack(false);
+            setShowStats(false);
         }
     }, [location.pathname, params.guid, params.expenseid]);
 
@@ -67,7 +71,16 @@ export default function Header() {
                 </div>
 
                 {/* Placeholder for right-side actions if needed */}
-                <div className="w-8"></div>
+                <div className="w-8 flex justify-end">
+                    {showStats && (
+                        <button
+                            onClick={() => navigate(`/g/${params.guid}/stats`)}
+                            className="p-2 -mr-2 rounded-full hover:bg-gray-100/80 text-gray-600 transition-colors"
+                        >
+                            <i className="ri-bar-chart-fill text-xl"></i>
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );

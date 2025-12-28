@@ -6,6 +6,7 @@ import ExpenseList, { expenseListLoader } from "./pages/ExpenseList"
 
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import ExpenseEditor, { expenseEditorLoader } from "./pages/ExpenseEditor";
+import StatsView, { statsLoader } from "./pages/StatsView";
 import CustomContainer from "./pages/CustomContainer";
 
 
@@ -29,6 +30,11 @@ const router = createBrowserRouter([
         path: "/g/:guid/e/:expenseid/edit",
         element: <ExpenseEditor />,
         loader: expenseEditorLoader
+      },
+      {
+        path: "/g/:guid/stats",
+        element: <StatsView />,
+        loader: statsLoader
       }
     ]
   }
