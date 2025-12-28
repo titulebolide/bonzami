@@ -204,6 +204,11 @@ export default function ExpenseList() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [nextPage, loading]);
 
+
+  useLayoutEffect(() => {
+    window.scrollTo(0, document.body.scrollHeight)
+  }, [expenses])
+
   return (
     <>
 
