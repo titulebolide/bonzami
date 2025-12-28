@@ -132,7 +132,6 @@ export default function ExpenseList() {
     if (initialData.results) {
       setExpenses(initialData.results);
       setNextPage(initialData.next);
-      // Reset scroll behavior?
     } else {
       // Fallback if API hasn't updated yet or something
       setExpenses(initialData);
@@ -207,7 +206,7 @@ export default function ExpenseList() {
 
   useLayoutEffect(() => {
     window.scrollTo(0, document.body.scrollHeight)
-  }, [expenses])
+  }, [initialData])
 
   return (
     <>
