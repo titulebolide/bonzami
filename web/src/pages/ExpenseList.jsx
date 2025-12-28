@@ -1,5 +1,6 @@
 import { useEffect, useState, useLayoutEffect } from "react";
 import { useLoaderData, useNavigate, useParams } from "react-router-dom";
+import NewExpenseButton from "../components/NewExpenseButton";
 
 
 
@@ -212,6 +213,7 @@ export default function ExpenseList() {
     <>
 
       <div id="expense-list" className="flex flex-col-reverse">
+        <div className="h-18 flex-none" />
         {loading && <div className="text-center p-4 text-gray-400">Loading history...</div>}
         {
           expenses.map((expense, index, array) => {
@@ -243,12 +245,7 @@ export default function ExpenseList() {
       </div>
 
       {/* Floating Action Button for New Expense */}
-      <button
-        onClick={() => navigate(`/g/${params.guid}/new`)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full shadow-lg shadow-blue-500/40 flex items-center justify-center text-white hover:scale-105 active:scale-95 transition-all duration-200 z-40"
-      >
-        <i className="ri-add-line text-3xl"></i>
-      </button>
+      <NewExpenseButton onClick={() => navigate(`/g/${params.guid}/new`)} />
 
       {/* Delete Confirmation Modal */}
       {deleteModalOpen && (
