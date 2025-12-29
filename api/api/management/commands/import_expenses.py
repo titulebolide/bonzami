@@ -2,7 +2,7 @@ import csv
 import argparse
 from datetime import datetime
 from django.core.management.base import BaseCommand, CommandError
-from api.models import User, Expense, ExpenseShare, Group
+from api.models import User, Expense, ExpenseShare, Group, Category
 from django.utils import timezone
 
 class Command(BaseCommand):
@@ -129,6 +129,19 @@ class Command(BaseCommand):
                     normalized_shares = {}
                     for u_name, val in shares.items():
                         normalized_shares[u_name] = val / total_share_val
+
+                    # Get or Create Category
+                    raw_category = row.get('category', '').strip()
+                    if not raw_category or raw_category == 'UNCATEGORIZED':
+                        category_name = 'other'
+                    else:
+                        category_name = raw_category.lower().replace('_', ' ')
+                    
+                    category, _ = Category.objects.get_or_create(
+                        name=category_name,
+                        group=new_group,
+                        defaults={'emoji': '💵'}
+                    )
                         
                     # Create Expense
                     expense = Expense.objects.create(
@@ -136,7 +149,8 @@ class Command(BaseCommand):
                         date=dt,
                         amount=amount,
                         group=new_group,
-                        by=payer
+                        by=payer,
+                        category=category
                     )
                     
                     # Create ExpenseShares
