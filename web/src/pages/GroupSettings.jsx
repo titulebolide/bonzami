@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useLoaderData, useParams, useNavigate } from 'react-router-dom';
 import EmojiPicker from 'emoji-picker-react';
 
-export async function groupMenuLoader({ params }) {
+export async function groupSettingsLoader({ params }) {
     const groupRes = await fetch(`http://127.0.0.1:8000/api/groups/${params.guid}/`);
     const usersRes = await fetch(`http://127.0.0.1:8000/api/users/?group=${params.guid}`);
     const categoriesRes = await fetch(`http://127.0.0.1:8000/api/categories/?group=${params.guid}`);
@@ -18,7 +18,7 @@ export async function groupMenuLoader({ params }) {
     return { group, users, categories };
 }
 
-export default function GroupMenu() {
+export default function GroupSettings() {
     const { group: initialGroup, users: initialUsers, categories: initialCategories } = useLoaderData();
     const { guid } = useParams();
     const navigate = useNavigate();
@@ -93,10 +93,9 @@ export default function GroupMenu() {
             <section className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                 <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                     <i className="ri-settings-3-line text-blue-500"></i>
-                    Group Settings
+                    Group Name
                 </h2>
                 <div className="space-y-3">
-                    <label className="block text-sm font-medium text-gray-600">Group Name</label>
                     <div className="flex gap-2">
                         <input
                             type="text"
