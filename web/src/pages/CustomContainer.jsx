@@ -4,7 +4,7 @@ import Header from "../components/Header"
 export default function CustomContainer() {
   const navigation = useNavigation();
   const isLoading = navigation.state === "loading";
-  const isSettleUpTarget = navigation.location?.pathname.includes("settle-up");
+  const isSettleUpTarget = navigation.location?.pathname.includes("/settle");
   const showSpinner = isLoading && isSettleUpTarget;
 
   return (

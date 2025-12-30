@@ -39,7 +39,7 @@ const router = createBrowserRouter([
         loader: statsLoader
       },
       {
-        path: "/g/:guid/settle-up",
+        path: "/g/:guid/settle",
         element: <SettleUpView />,
         loader: settleUpLoader
       },
