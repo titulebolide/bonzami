@@ -28,6 +28,10 @@ export default function GroupSettings() {
     const [categories, setCategories] = useState(initialCategories);
     const [activeEmojiPicker, setActiveEmojiPicker] = useState(null); // stores category ID or null
 
+    const [savedGroupName, setSavedGroupName] = useState(false);
+    const [savedParticipants, setSavedParticipants] = useState(false);
+    const [savedCategories, setSavedCategories] = useState(false);
+
     const handleGroupNameSave = async () => {
         try {
             const res = await fetch(`http://127.0.0.1:8000/api/groups/${guid}/`, {
@@ -36,10 +40,10 @@ export default function GroupSettings() {
                 body: JSON.stringify({ name: groupName })
             });
             if (res.ok) {
-                // Ideally refresh context or just let it stay
-                // The header might need a refresh but for now this edits the persistence
-                alert("Group name updated!");
-                navigate(0); // Refresh to update header
+                setSavedGroupName(true);
+                setTimeout(() => {
+                    navigate(0); // Refresh to update header
+                }, 1000);
             }
         } catch (e) {
             console.error(e);
@@ -60,7 +64,8 @@ export default function GroupSettings() {
                     body: JSON.stringify({ name: user.name })
                 })
             ));
-            alert("Participants updated!");
+            setSavedParticipants(true);
+            setTimeout(() => setSavedParticipants(false), 2000);
         } catch (e) {
             console.error(e);
             alert("Failed to update participants");
@@ -80,7 +85,8 @@ export default function GroupSettings() {
                     body: JSON.stringify({ name: cat.name, emoji: cat.emoji })
                 })
             ));
-            alert("Categories updated!");
+            setSavedCategories(true);
+            setTimeout(() => setSavedCategories(false), 2000);
         } catch (e) {
             console.error(e);
             alert("Failed to update categories");
@@ -96,13 +102,18 @@ export default function GroupSettings() {
                     Group Name
                 </h2>
                 <div className="space-y-3">
-                    <div className="flex gap-2">
-                        <input
-                            type="text"
-                            value={groupName}
-                            onChange={(e) => setGroupName(e.target.value)}
-                            className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-gray-800"
-                        />
+                    <input
+                        type="text"
+                        value={groupName}
+                        onChange={(e) => setGroupName(e.target.value)}
+                        className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-gray-800"
+                    />
+                    <div className="flex justify-end pt-2 items-center gap-3">
+                        {savedGroupName && (
+                            <span className="text-green-600 font-medium flex items-center gap-1 text-sm animate-in fade-in slide-in-from-right-2 duration-300">
+                                Saved <i className="ri-checkbox-circle-line"></i>
+                            </span>
+                        )}
                         <button
                             onClick={handleGroupNameSave}
                             className="px-4 py-2 border border-blue-500 text-blue-600 hover:bg-blue-50 rounded-xl font-medium transition-colors active:scale-95 duration-200"
@@ -133,7 +144,12 @@ export default function GroupSettings() {
                             />
                         </div>
                     ))}
-                    <div className="flex justify-end pt-2">
+                    <div className="flex justify-end pt-2 items-center gap-3">
+                        {savedParticipants && (
+                            <span className="text-green-600 font-medium flex items-center gap-1 text-sm animate-in fade-in slide-in-from-right-2 duration-300">
+                                <i className="ri-checkbox-circle-line"></i> Saved !
+                            </span>
+                        )}
                         <button
                             onClick={handleParticipantsSave}
                             className="px-4 py-2 border border-green-500 text-green-600 hover:bg-green-50 rounded-xl font-medium transition-colors active:scale-95 duration-200"
@@ -188,7 +204,12 @@ export default function GroupSettings() {
                             />
                         </div>
                     ))}
-                    <div className="flex justify-end pt-2">
+                    <div className="flex justify-end pt-2 items-center gap-3">
+                        {savedCategories && (
+                            <span className="text-green-600 font-medium flex items-center gap-1 text-sm animate-in fade-in slide-in-from-right-2 duration-300">
+                                Saved <i className="ri-checkbox-circle-line"></i>
+                            </span>
+                        )}
                         <button
                             onClick={handleCategoriesSave}
                             className="px-4 py-2 border border-purple-500 text-purple-600 hover:bg-purple-50 rounded-xl font-medium transition-colors active:scale-95 duration-200"
