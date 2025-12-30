@@ -139,6 +139,13 @@ class CategoryViewSet(viewsets.ModelViewSet):
     filterset_fields = ('group',)
 
 
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = models.User.objects.all()
+    serializer_class = serializers.UserSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_fields = ('group',)
+
+
 class AppPagination(pagination.PageNumberPagination):
     page_size = 20
     page_size_query_param = 'page_size'

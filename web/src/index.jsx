@@ -8,6 +8,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import ExpenseEditor, { expenseEditorLoader } from "./pages/ExpenseEditor";
 import StatsView, { statsLoader } from "./pages/StatsView";
 import SettleUpView, { settleUpLoader } from "./pages/SettleUpView";
+import GroupSettings, { groupSettingsLoader } from "./pages/GroupSettings";
 import CustomContainer from "./pages/CustomContainer";
 
 
@@ -41,6 +42,11 @@ const router = createBrowserRouter([
         path: "/g/:guid/settle-up",
         element: <SettleUpView />,
         loader: settleUpLoader
+      },
+      {
+        path: "/g/:guid/settings",
+        element: <GroupSettings />,
+        loader: groupSettingsLoader
       }
     ]
   }

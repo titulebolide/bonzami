@@ -75,8 +75,17 @@ export default function Header() {
                         </h1>
                     </div>
 
-                    {/* Right Placeholder */}
-                    <div className="w-10"></div>
+                    {/* Right Placeholder / Settings Icon */}
+                    <div className="w-10 flex justify-end">
+                        {params.guid && !showBack && (
+                            <button
+                                onClick={() => navigate(`/g/${params.guid}/settings`)}
+                                className="p-2 -mr-2 rounded-full hover:bg-gray-100/80 text-gray-600 transition-colors"
+                            >
+                                <i className="ri-settings-3-line text-xl"></i>
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 
